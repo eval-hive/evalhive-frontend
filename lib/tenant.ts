@@ -1,5 +1,3 @@
-import { headers } from 'next/headers';
-
 /**
  * Frontend Tenant Utility
  */
@@ -14,17 +12,6 @@ export function extractSlugFromHost(host: string): string | null {
     } else if (subdomain === 'admin') {
       return null; // Admin is super admin context
     }
-  }
-  return null;
-}
-
-export async function getSchoolSlugServer(): Promise<string | null> {
-  try {
-    const headersList = await headers();
-    const slug = headersList.get('x-school-slug');
-    if (slug) return slug === '__superadmin' ? null : slug;
-  } catch (e) {
-    // Return null if fails
   }
   return null;
 }
