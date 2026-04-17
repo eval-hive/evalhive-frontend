@@ -23,7 +23,7 @@ export default function TeacherQuestionsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [confirmEdit, setConfirmEdit] = useState(false);
 
-  const emptyForm = { questionText: '', optionA: '', optionB: '', optionC: '', optionD: '', correctOption: 'a' };
+  const emptyForm = { questionText: '', optionA: '', optionB: '', optionC: '', optionD: '', optionE: '', correctOption: 'a' };
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { loadExam(); }, [id]);
@@ -41,7 +41,10 @@ export default function TeacherQuestionsPage() {
   const addQuestion = async () => {
     setError('');
     if (!form.questionText || !form.optionA || !form.optionB || !form.optionC || !form.optionD) {
-      setError('All fields are required'); return;
+      setError('A-D fields are required'); return;
+    }
+    if (exam?.optionsCount === 5 && !form.optionE) {
+      setError('Option E is required since this exam has 5 options'); return;
     }
 
     // Warn about editing approved exam
@@ -71,7 +74,7 @@ export default function TeacherQuestionsPage() {
     if (q) {
       setForm({
         questionText: q.questionText, optionA: q.optionA, optionB: q.optionB,
-        optionC: q.optionC, optionD: q.optionD, correctOption: q.correctOption,
+        optionC: q.optionC, optionD: q.optionD, optionE: q.optionE || '', correctOption: q.correctOption,
       });
       setEditId(questionId);
     }
@@ -147,7 +150,7 @@ export default function TeacherQuestionsPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {['A', 'B', 'C', 'D'].map((label) => (
+            {['A', 'B', 'C', 'D', ...(exam?.optionsCount === 5 ? ['E'] : [])].map((label) => (
               <div key={label}>
                 <label className="block text-sm font-medium text-text-primary mb-1">Option {label}</label>
                 <input type="text" value={(form as any)[`option${label}`]}
@@ -161,7 +164,7 @@ export default function TeacherQuestionsPage() {
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">Correct Answer</label>
             <div className="flex gap-4">
-              {['a', 'b', 'c', 'd'].map((opt) => (
+              {['a', 'b', 'c', 'd', ...(exam?.optionsCount === 5 ? ['e'] : [])].map((opt) => (
                 <label key={opt} className="inline-flex items-center gap-1.5 cursor-pointer">
                   <input type="radio" name="correctOption" value={opt}
                     checked={form.correctOption === opt} onChange={(e) => update('correctOption', e.target.value)}

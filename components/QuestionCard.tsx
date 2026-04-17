@@ -9,7 +9,8 @@ interface QuestionCardProps {
     optionB: string;
     optionC: string;
     optionD: string;
-    correctOption: 'a' | 'b' | 'c' | 'd';
+    optionE?: string | null;
+    correctOption: 'a' | 'b' | 'c' | 'd' | 'e';
     imageUrl?: string | null;
   };
   onEdit?: (id: string) => void;
@@ -17,15 +18,18 @@ interface QuestionCardProps {
   readonly?: boolean;
 }
 
-const optionLabels = { a: 'A', b: 'B', c: 'C', d: 'D' };
+const optionLabels = { a: 'A', b: 'B', c: 'C', d: 'D', e: 'E' };
 
 export default function QuestionCard({ index, question, onEdit, onDelete, readonly = false }: QuestionCardProps) {
-  const options = [
-    { key: 'a' as const, label: 'A', value: question.optionA },
-    { key: 'b' as const, label: 'B', value: question.optionB },
-    { key: 'c' as const, label: 'C', value: question.optionC },
-    { key: 'd' as const, label: 'D', value: question.optionD },
+  const options: { key: 'a'|'b'|'c'|'d'|'e', label: string, value: string }[] = [
+    { key: 'a', label: 'A', value: question.optionA },
+    { key: 'b', label: 'B', value: question.optionB },
+    { key: 'c', label: 'C', value: question.optionC },
+    { key: 'd', label: 'D', value: question.optionD },
   ];
+  if (question.optionE !== undefined && question.optionE !== null) {
+    options.push({ key: 'e' as const, label: 'E', value: question.optionE });
+  }
 
   return (
     <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
