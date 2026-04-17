@@ -16,7 +16,10 @@ export default function PlatformSchoolsPage() {
   const [isLoading, setIsLoading] = useState(true);
   
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({ name: '', slug: '', address: '', contactEmail: '' });
+  const [formData, setFormData] = useState({ 
+    name: '', slug: '', address: '', contactEmail: '',
+    adminEmail: '', adminPassword: '' 
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,8 +50,24 @@ export default function PlatformSchoolsPage() {
     setError(null);
 
     try {
-      await api.post('/schools', formData);
-      setFormData({ name: '', slug: '', address: '', contactEmail: '' });
+      const schoolRes = await api.post('/schools', {
+        name: formData.name,
+        slug: formData.slug,
+        address: formData.address,
+        contactEmail: formData.contactEmail
+      });
+      
+      const schoolId = schoolRes.data.school.id;
+      
+      // Step 2: Create the initial admin
+      if (formData.adminEmail && formData.adminPassword) {
+        await api.post(`/schools/${schoolId}/admins`, {
+          email: formData.adminEmail,
+          password: formData.adminPassword
+        });
+      }
+
+      setFormData({ name: '', slug: '', address: '', contactEmail: '', adminEmail: '', adminPassword: '' });
       setShowAddForm(false);
       fetchSchools();
     } catch (err: any) {
@@ -134,6 +153,33 @@ export default function PlatformSchoolsPage() {
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
                 />
+              </div>
+            </div>
+
+            <h3 className="text-md font-semibold text-text-primary pt-2">Initial Administrator</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">Admin Email</label>
+                <input
+                  type="email"
+                  required
+                  value={formData.adminEmail}
+                  onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
+                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
+                  placeholder="admin@school.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">Temporary Password</label>
+                <input
+                  type="password"
+                  required
+                  value={formData.adminPassword}
+                  onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
+                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
+                  placeholder="••••••••"
+                />
+                <p className="mt-1 text-xs text-text-secondary">Admin will be forced to change this on first login.</p>
               </div>
             </div>
             <div className="flex justify-end space-x-3 pt-2">

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { getSchoolSlugClient } from './tenant';
 
 const api = axios.create({
   baseURL: process.env.NODE_ENV === 'development' ? 'http://localhost:5000/api' : process.env.NEXT_PUBLIC_API_URL,
@@ -13,6 +14,13 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Pass school context to backend
+  const schoolSlug = getSchoolSlugClient();
+  if (schoolSlug) {
+    config.headers['x-school-slug'] = schoolSlug;
+  }
+  
   return config;
 }, (error) => Promise.reject(error));
 
