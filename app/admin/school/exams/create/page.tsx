@@ -24,7 +24,7 @@ export default function CreateExamPage() {
   const [form, setForm] = useState({
     title: '', subjectId: '', classLevelId: '', sessionId: '', termId: '',
     examType: 'internal', scheduledDate: '', startTime: '', endTime: '',
-    durationMinutes: '60', negativeMarking: false, resultVisibility: 'hidden',
+    durationMinutes: '60', negativeMarking: false, resultVisibility: 'hidden', optionsCount: 4,
   });
 
   useEffect(() => {
@@ -134,6 +134,14 @@ export default function CreateExamPage() {
                 <option value="hidden">Hidden</option>
                 <option value="score_only">Score Only</option>
                 <option value="full_breakdown">Full Breakdown</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">Options per Question</label>
+              <select value={form.optionsCount} onChange={(e) => update('optionsCount', parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
+                <option value={4}>4 Options (A-D)</option>
+                <option value={5}>5 Options (A-E)</option>
               </select>
             </div>
           </div>
