@@ -52,7 +52,7 @@ export default function ExamResult() {
 
   if (loading) {
     return <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-      <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
+      <Loader2 className="w-10 h-10 animate-spin text-brand-indigo" />
     </div>;
   }
 
@@ -72,7 +72,7 @@ export default function ExamResult() {
       <div className="max-w-4xl mx-auto py-8">
         <button 
           onClick={() => router.push('/student/dashboard')}
-          className="flex items-center text-text-secondary hover:text-brand-primary font-medium transition-colors mb-6"
+          className="flex items-center text-text-secondary hover:text-brand-indigo font-medium transition-colors mb-6"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Dashboard
@@ -95,7 +95,7 @@ export default function ExamResult() {
             <div className="flex flex-wrap justify-center gap-6 mt-6">
               <div className="bg-background-alt p-6 rounded-2xl min-w-[200px] border border-border shadow-sm">
                  <p className="text-sm font-medium text-text-secondary mb-1">Your Score</p>
-                 <p className="text-4xl font-bold text-brand-primary">{result.score} <span className="text-xl text-text-secondary font-medium">/ {result.totalQuestions}</span></p>
+                 <p className="text-4xl font-bold text-brand-indigo">{result.score} <span className="text-xl text-text-secondary font-medium">/ {result.totalQuestions}</span></p>
               </div>
               <div className="bg-background-alt p-6 rounded-2xl min-w-[200px] border border-border shadow-sm">
                  <p className="text-sm font-medium text-text-secondary mb-1">Percentage</p>
@@ -122,7 +122,7 @@ export default function ExamResult() {
                           {isCorrect ? <CheckCircle className="w-6 h-6 text-green-500" /> : <XCircle className="w-6 h-6 text-red-500" />}
                        </div>
                        <div className="flex-1">
-                          <p className="text-lg font-medium text-text-primary mb-4"><span className="text-brand-primary font-bold mr-2">{idx + 1}.</span> {q.questionText}</p>
+                          <p className="text-lg font-medium text-text-primary mb-4"><span className="text-brand-indigo font-bold mr-2">{idx + 1}.</span> {q.questionText}</p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div className="p-4 rounded-lg bg-background-alt border border-border">
                                <p className="text-xs font-semibold text-text-secondary uppercase mb-1">Your Answer</p>

@@ -180,14 +180,14 @@ export default function ExamTakingInterface() {
 
   if (loading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
-      <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
+      <Loader2 className="w-10 h-10 animate-spin text-brand-indigo" />
     </div>;
   }
 
   if (submitting) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-brand-primary mb-4" />
+        <Loader2 className="w-12 h-12 animate-spin text-brand-indigo mb-4" />
         <h2 className="text-xl font-semibold text-text-primary">Submitting Exam...</h2>
         <p className="text-text-secondary mt-2">Please wait, compiling your results.</p>
       </div>
@@ -223,14 +223,14 @@ export default function ExamTakingInterface() {
 
         <div className="flex items-center space-x-6">
           <div className={`flex items-center font-mono text-xl font-medium px-4 py-1.5 rounded-lg border ${
-            isWarning ? 'bg-red-500/10 text-red-600 border-red-500/20 animate-pulse' : 'bg-background-alt text-brand-primary border-transparent'
+            isWarning ? 'bg-red-500/10 text-red-600 border-red-500/20 animate-pulse' : 'bg-background-alt text-brand-indigo border-transparent'
           }`}>
             <Clock className="w-5 h-5 mr-2" />
             {m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}
           </div>
           <button 
             onClick={() => setShowConfirmModal(true)}
-            className="px-6 py-2 bg-brand-primary text-white font-medium rounded-lg hover:bg-brand-primary/90 transition-colors shadow-sm"
+            className="px-6 py-2 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 cursor-pointer transition-colors shadow-sm"
           >
             Submit
           </button>
@@ -261,12 +261,12 @@ export default function ExamTakingInterface() {
                 const isFlagged = ans && ans.flagged;
                 const isActive = currentIdx === idx;
 
-                let btnClass = "h-10 text-sm font-medium rounded border transition-colors relative flex items-center justify-center ";
+                let btnClass = "h-10 text-sm cursor-pointer font-medium rounded border transition-colors relative flex items-center justify-center ";
                 
-                if (isActive) btnClass += "ring-2 bg-foreground ring-brand-primary ring-offset-2 ring-offset-background ";
+                if (isActive) btnClass += "ring-2 bg-foreground ring-brand-indigo ring-offset-2 text-white ring-offset-background ";
                 
                 if (isAnswered) {
-                  btnClass += "bg-brand-primary text-text-primary border-brand-primary ";
+                  btnClass += "bg-brand-indigo text-white border-brand-indigo ";
                 } else {
                   btnClass += "bg-card text-text-primary border-border hover:bg-background ";
                 }
@@ -289,7 +289,7 @@ export default function ExamTakingInterface() {
           </div>
           <div className="p-4 border-t border-border flex flex-wrap gap-4 text-xs text-text-secondary">
              <div className="flex items-center"><div className="w-3 h-3 bg-card border border-border rounded mr-2"></div> Unanswered</div>
-             <div className="flex items-center"><div className="w-3 h-3 bg-brand-primary rounded mr-2"></div> Answered</div>
+             <div className="flex items-center"><div className="w-3 h-3 bg-brand-indigo rounded mr-2"></div> Answered</div>
              <div className="flex items-center"><div className="w-3 h-3 border-y-2 border-brand-gold bg-card rounded mr-2"></div> Flagged</div>
           </div>
         </aside>
@@ -301,7 +301,7 @@ export default function ExamTakingInterface() {
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <div className="flex justify-between items-start mb-8">
                   <h2 className="text-2xl font-medium text-text-primary leading-tight flex-1">
-                    <span className="text-brand-primary font-bold mr-3">{currentIdx + 1}.</span>
+                    <span className="text-brand-indigo font-bold mr-3">{currentIdx + 1}.</span>
                     {currentQ.questionText}
                   </h2>
                   <button 
@@ -337,12 +337,12 @@ export default function ExamTakingInterface() {
                         onClick={() => handleSelectOption(optKey)}
                         className={`w-full text-left p-5 rounded-xl border-2 transition-all flex items-center group ${
                           isSelected 
-                            ? 'border-brand-primary bg-brand-primary/5 shadow-sm' 
-                            : 'border-border bg-background hover:border-brand-primary/40 hover:bg-background-alt'
+                            ? 'border-brand-indigo bg-brand-indigo/5 shadow-sm' 
+                            : 'border-border bg-background hover:border-brand-indigo/40 hover:bg-background-alt'
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4 shrink-0 transition-colors ${
-                          isSelected ? 'bg-brand-primary text-white' : 'bg-background-alt text-text-secondary group-hover:text-brand-primary'
+                          isSelected ? 'bg-brand-indigo text-white' : 'bg-background-alt text-text-secondary group-hover:text-brand-indigo'
                         }`}>
                           {optKey.toUpperCase()}
                         </div>
@@ -373,7 +373,7 @@ export default function ExamTakingInterface() {
             {currentIdx === questions.length - 1 ? (
               <button 
                 onClick={() => setShowConfirmModal(true)}
-                className="px-6 py-2.5 bg-brand-primary text-white font-medium rounded-lg hover:bg-brand-primary/90 transition-colors shadow-sm"
+                className="px-6 py-2.5 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 transition-colors shadow-sm"
               >
                 Submit Exam
               </button>
@@ -394,8 +394,8 @@ export default function ExamTakingInterface() {
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
            <div className="bg-card rounded-2xl w-full max-w-md p-8 shadow-xl animate-in zoom-in-95 duration-200">
-             <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mb-6">
-                <CheckCircle className="w-6 h-6 text-brand-primary" />
+             <div className="w-12 h-12 bg-brand-indigo/10 rounded-full flex items-center justify-center mb-6">
+                <CheckCircle className="w-6 h-6 text-brand-indigo" />
              </div>
              <h3 className="text-xl font-bold text-text-primary mb-2">Submit Exam</h3>
              <p className="text-text-secondary mb-6 leading-relaxed">
@@ -407,7 +407,7 @@ export default function ExamTakingInterface() {
                <button className="flex-1 py-3 bg-background-alt hover:bg-border text-text-primary rounded-xl font-medium transition-colors" onClick={() => setShowConfirmModal(false)}>
                  Go Back
                </button>
-               <button className="flex-1 py-3 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-medium transition-colors shadow-sm" onClick={handleManualSubmit}>
+               <button className="flex-1 py-3 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl font-medium transition-colors shadow-sm" onClick={handleManualSubmit}>
                  Submit Now
                </button>
              </div>

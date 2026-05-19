@@ -64,16 +64,16 @@ export default function StudentDashboard() {
                 <div 
                   key={exam.id} 
                   className={`bg-card rounded-xl border p-6 shadow-sm transition-colors cursor-pointer group ${
-                    hasInProgress ? 'border-brand-indigo/50 bg-brand-indigo/5 hover:bg-brand-indigo/10' : 'border-border hover:border-brand-primary/50'
+                    hasInProgress ? 'border-brand-indigo/50 bg-brand-indigo/5 hover:bg-brand-indigo/10' : 'border-border hover:border-brand-indigo/50'
                   }`}
                   onClick={() => router.push(hasInProgress ? `/student/exam/${exam.id}` : `/student/exam/${exam.id}`)}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <span className="text-xs font-semibold px-2 py-1 bg-background-alt text-brand-primary rounded-full">
+                      <span className="text-xs font-semibold px-2 py-1 bg-background-alt text-brand-indigo rounded-full">
                         {exam.subject.name}
                       </span>
-                      <h3 className="mt-3 text-lg font-medium text-text-primary group-hover:text-brand-primary transition-colors">
+                      <h3 className="mt-3 text-lg font-medium text-text-primary group-hover:text-brand-indigo transition-colors">
                         {exam.title}
                       </h3>
                     </div>
@@ -88,7 +88,7 @@ export default function StudentDashboard() {
                     <button className={`w-full py-2 px-4 rounded-lg font-medium flex items-center justify-center transition-colors ${
                       hasInProgress 
                         ? 'bg-brand-indigo text-white hover:bg-brand-indigo/90' 
-                        : 'bg-brand-primary text-white hover:bg-brand-primary/90'
+                        : 'bg-brand-indigo text-white hover:bg-brand-indigo/90'
                     }`}>
                       {hasInProgress ? 'Resume Exam' : 'Start Exam'}
                       <ArrowRight className="w-4 h-4 ml-2" />
