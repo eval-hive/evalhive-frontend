@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Flag, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
+import { useRouter, useParams } from 'next/navigation';
+import { Flag, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, Loader2, Clock } from 'lucide-react';
 import api from '@/lib/api';
 
-export default function ExamTakingInterface({ params }: { params: { id: string } }) {
+export default function ExamTakingInterface() {
   const router = useRouter();
-  const examId = params.id;
+  const params = useParams();
+  const examId = params.id as string;
   
   const [attempt, setAttempt] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
@@ -262,10 +263,10 @@ export default function ExamTakingInterface({ params }: { params: { id: string }
 
                 let btnClass = "h-10 text-sm font-medium rounded border transition-colors relative flex items-center justify-center ";
                 
-                if (isActive) btnClass += "ring-2 ring-brand-primary ring-offset-2 ring-offset-background ";
+                if (isActive) btnClass += "ring-2 bg-foreground ring-brand-primary ring-offset-2 ring-offset-background ";
                 
                 if (isAnswered) {
-                  btnClass += "bg-brand-primary text-white border-brand-primary ";
+                  btnClass += "bg-brand-primary text-text-primary border-brand-primary ";
                 } else {
                   btnClass += "bg-card text-text-primary border-border hover:bg-background ";
                 }

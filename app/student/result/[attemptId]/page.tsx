@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { FileText, CheckCircle, XCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 
-export default function ExamResult({ params }: { params: { attemptId: string } }) {
+export default function ExamResult() {
   const router = useRouter();
-  const attemptId = params.attemptId;
+  const params = useParams();
+  const attemptId = params.attemptId as string;
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

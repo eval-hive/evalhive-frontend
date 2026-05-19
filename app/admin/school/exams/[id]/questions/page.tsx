@@ -59,6 +59,20 @@ export default function ExamQuestionsPage() {
     } finally { setSaving(false); }
   };
 
+  const approveExam = async () => {
+    if (!confirm('Are you sure you want to publish this exam? Students will be able to see it once the window opens.')) return;
+    setSaving(true);
+    setError('');
+    try {
+      await api.post(`/exams/${id}/approve`);
+      router.push(`/admin/school/exams/${id}`);
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Failed to approve exam');
+      setSaving(false);
+    }
+  };
+
+
   const startEdit = (questionId: string) => {
     const q = questions.find(q => q.id === questionId);
     if (q) {
@@ -80,10 +94,19 @@ export default function ExamQuestionsPage() {
 
   return (
     <DashboardLayout navItems={navItems} title="Exam Questions" role="School Admin">
-      <button onClick={() => router.push(`/admin/school/exams/${id}`)}
-        className="inline-flex items-center text-sm text-text-secondary hover:text-brand-indigo mb-4">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Back to Exam
-      </button>
+      <div className="flex justify-between items-center mb-4">
+        <button onClick={() => router.push(`/admin/school/exams/${id}`)}
+          className="inline-flex items-center text-sm text-text-secondary hover:text-brand-indigo">
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Exam
+        </button>
+
+        {exam?.status === 'draft' && questions.length > 0 && (
+          <button onClick={approveExam} disabled={saving}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-brand-emerald hover:bg-brand-emerald/90 transition-colors shadow-sm">
+            Publish & Approve Exam
+          </button>
+        )}
+      </div>
 
       <div className="text-sm text-text-secondary mb-4 font-medium">{questions.length} question{questions.length !== 1 ? 's' : ''}</div>
 
