@@ -1,0 +1,1 @@
+components/ResultsTable.tsx(83,26): error TS18047: 'sortConfig' is possibly 'null'.
