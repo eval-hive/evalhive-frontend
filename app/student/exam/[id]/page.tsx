@@ -44,27 +44,25 @@ export default function ExamTakingInterface() {
       try {
         let attemptRes;
         
-        // try to resume first, or start new if not found
+        // Mock routes create an attempt before sending the student here, while
+        // internal exams still arrive with an exam id. Resume first, then start.
         try {
-          // In real implementation we'd probably hit a central point,
-          // but let's try starting first. If it says "Attempt already exists",
-          // we fetch the attempt from a resume endpoint.
-          attemptRes = await api.post(`/student/exams/${examId}/start`);
-        } catch (err: any) {
-          if (err.response?.data?.error === 'Attempt already exists for this exam') {
-            // Find the attempt ID - backend should ideally return it, 
-            // but we can just fetch all attempts to find it or modify backend.
-            // Wait, our backend doesn't return attemptId on error. Let's just fetch exams and find the attemptId.
-            const examsRes = await api.get('/student/exams');
-            const targetExam = examsRes.data.exams.find((e: any) => e.id === examId);
-            if (targetExam?.inProgressAttemptId) {
-               attemptRes = await api.get(`/student/attempts/${targetExam.inProgressAttemptId}/resume`);
+          attemptRes = await api.get(`/student/attempts/${examId}/resume`);
+        } catch {
+          try {
+            attemptRes = await api.post(`/student/exams/${examId}/start`);
+          } catch (err: any) {
+            if (err.response?.data?.error === 'Attempt already exists for this exam') {
+              const examsRes = await api.get('/student/exams');
+              const targetExam = examsRes.data.exams.find((e: any) => e.id === examId);
+              if (targetExam?.inProgressAttemptId) {
+                attemptRes = await api.get(`/student/attempts/${targetExam.inProgressAttemptId}/resume`);
+              } else {
+                throw err;
+              }
             } else {
-               router.push('/student/dashboard');
-               return;
+              throw err;
             }
-          } else {
-            throw err;
           }
         }
         
