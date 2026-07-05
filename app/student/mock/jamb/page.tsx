@@ -18,12 +18,16 @@ export default function JambMockPage() {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
+  const [disabledMessage, setDisabledMessage] = useState('');
   const ENGLISH_KEYWORD = 'english';
 
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
         const res = await api.get('/student/jamb/subjects');
+        if (res.data.disabled) {
+          setDisabledMessage(res.data.message || 'JAMB mock is currently disabled by your school.');
+        }
         const allSubjects = res.data.subjects || [];
         setSubjects(allSubjects);
         // Auto-select English Literature
@@ -72,11 +76,16 @@ export default function JambMockPage() {
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-brand-indigo" />
         </div>
+      ) : disabledMessage ? (
+        <div className="bg-card rounded-xl border border-border p-12 text-center text-text-secondary">
+          <BookOpen className="w-12 h-12 mx-auto mb-4 text-border" />
+          <p className="font-medium">{disabledMessage}</p>
+        </div>
       ) : subjects.length === 0 ? (
         <div className="bg-card rounded-xl border border-border p-12 text-center text-text-secondary">
           <BookOpen className="w-12 h-12 mx-auto mb-4 text-border" />
-          <p className="font-medium">No JAMB mock question banks are available yet.</p>
-          <p className="text-sm mt-2">Ask your school admin to set up JAMB mock exams.</p>
+          <p className="font-medium">No JAMB mock subjects are available yet.</p>
+          <p className="text-sm mt-2">A subject appears here after its JAMB question bank has at least 50 questions.</p>
         </div>
       ) : (
         <div className="max-w-3xl mx-auto">

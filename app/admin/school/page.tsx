@@ -7,7 +7,10 @@ import {
   UploadCloud,
   FileSpreadsheet
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
+import api from '@/lib/api';
 
 const navItems = [
   { name: 'School Dashboard', href: '/admin/school', icon: BuildingIcon },
@@ -15,6 +18,7 @@ const navItems = [
   { name: 'Teachers', href: '/admin/school/teachers', icon: Users },
   { name: 'Students', href: '/admin/school/students', icon: GraduationCap },
   { name: 'Exams', href: '/admin/school/exams', icon: FileSpreadsheet },
+  { name: 'Import Questions', href: '/admin/school/import', icon: UploadCloud },
   { name: 'Results', href: '/admin/school/results', icon: FileSpreadsheet },
 ];
 
@@ -48,6 +52,27 @@ function BuildingIcon(props: any) {
 }
 
 export default function SchoolAdminDashboard() {
+  const router = useRouter();
+  const [mockSettings, setMockSettings] = useState({ jambMockEnabled: true, waecMockEnabled: true });
+
+  useEffect(() => {
+    api.get('/schools/mock-settings')
+      .then(res => setMockSettings(res.data.settings))
+      .catch(console.error);
+  }, []);
+
+  const updateMockSetting = async (field: 'jambMockEnabled' | 'waecMockEnabled', value: boolean) => {
+    const next = { ...mockSettings, [field]: value };
+    setMockSettings(next);
+    try {
+      const res = await api.put('/schools/mock-settings', { [field]: value });
+      setMockSettings(res.data.settings);
+    } catch (error) {
+      setMockSettings(mockSettings);
+      console.error(error);
+    }
+  };
+
   return (
     <DashboardLayout navItems={navItems} title="School Administration" role="School Admin">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 border-b border-border pb-8">
@@ -65,20 +90,46 @@ export default function SchoolAdminDashboard() {
       </div>
 
       <div className="mt-8">
+        <h2 className="text-lg font-semibold text-text-primary mb-4">Mock Exam Availability</h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {[
+            { key: 'jambMockEnabled' as const, title: 'JAMB Mock', description: 'Allow students to take JAMB mock practice anytime.' },
+            { key: 'waecMockEnabled' as const, title: 'WAEC Mock', description: 'Allow students to take WAEC mock papers anytime.' },
+          ].map(item => (
+            <div key={item.key} className="bg-card rounded-xl border border-border p-5 shadow-sm flex items-center justify-between gap-4">
+              <div>
+                <h3 className="font-medium text-text-primary">{item.title}</h3>
+                <p className="text-sm text-text-secondary mt-1">{item.description}</p>
+              </div>
+              <button
+                onClick={() => updateMockSetting(item.key, !mockSettings[item.key])}
+                className={`px-4 py-2 rounded-lg text-sm font-medium text-white ${mockSettings[item.key] ? 'bg-brand-emerald' : 'bg-brand-red'}`}
+              >
+                {mockSettings[item.key] ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-8">
         <h2 className="text-lg font-semibold text-text-primary mb-4">Bulk Data Management</h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           
           {/* CSV Import Students placeholder card */}
-          <div className="bg-card rounded-xl border border-border p-6 shadow-sm flex flex-col items-center justify-center text-center hover:border-brand-indigo/50 transition-colors cursor-pointer">
+          <div
+            onClick={() => router.push('/admin/school/import')}
+            className="bg-card rounded-xl border border-border p-6 shadow-sm flex flex-col items-center justify-center text-center hover:border-brand-indigo/50 transition-colors cursor-pointer"
+          >
             <div className="h-12 w-12 rounded-full bg-brand-indigo/10 flex items-center justify-center mb-4">
               <UploadCloud className="h-6 w-6 text-brand-indigo" />
             </div>
-            <h3 className="text-lg font-medium text-text-primary">Import Students (CSV)</h3>
+            <h3 className="text-lg font-medium text-text-primary">Import Questions (AI)</h3>
             <p className="mt-1 text-sm text-text-secondary">
-              Upload a bulk CSV list of new students for the current session.
+              Upload a Word or PDF question document, review extracted questions, and add them to an exam.
             </p>
             <button className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-indigo hover:bg-brand-indigo/90 focus:outline-none">
-              Upload File
+              Open Import
             </button>
           </div>
 

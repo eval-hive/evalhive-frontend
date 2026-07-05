@@ -15,6 +15,8 @@ import api from '@/lib/api';
 
 const navItems = [
   { name: 'My Exams', href: '/student/dashboard', icon: Monitor },
+  { name: 'JAMB Mock', href: '/student/mock/jamb', icon: PlayCircle },
+  { name: 'WAEC Mock', href: '/student/mock/waec', icon: PlayCircle },
   { name: 'History & Results', href: '/student/history', icon: History },
   { name: 'Mock Analytics', href: '/student/analytics', icon: BarChart },
 ];
@@ -101,14 +103,16 @@ export default function StudentDashboard() {
         )}
       </div>
 
-      <div className="mb-8 opacity-50 pointer-events-none">
+      <div className="mb-8">
         <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center">
-          Practice Exams (Mock) 
-          <span className="ml-3 text-xs font-medium px-2 py-1 bg-background text-text-secondary rounded">Coming soon</span>
+          Practice Exams (Mock)
         </h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
           
-          <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+          <div
+            onClick={() => router.push('/student/mock/jamb')}
+            className="bg-card rounded-xl border border-border p-6 shadow-sm hover:border-brand-indigo/50 transition-colors cursor-pointer"
+          >
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-lg font-medium text-text-primary">JAMB Mock</h3>
@@ -118,7 +122,10 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+          <div
+            onClick={() => router.push('/student/mock/waec')}
+            className="bg-card rounded-xl border border-border p-6 shadow-sm hover:border-brand-indigo/50 transition-colors cursor-pointer"
+          >
              <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-lg font-medium text-text-primary">WAEC Mock</h3>

@@ -17,11 +17,15 @@ export default function WaecMockPage() {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [disabledMessage, setDisabledMessage] = useState('');
 
   useEffect(() => {
     const fetchPapers = async () => {
       try {
         const res = await api.get('/student/waec/papers');
+        if (res.data.disabled) {
+          setDisabledMessage(res.data.message || 'WAEC mock is currently disabled by your school.');
+        }
         setPapers(res.data.papers || []);
       } catch (err) {
         console.error(err);
@@ -54,6 +58,11 @@ export default function WaecMockPage() {
       {loading ? (
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-brand-indigo" />
+        </div>
+      ) : disabledMessage ? (
+        <div className="bg-card rounded-xl border border-border p-12 text-center text-text-secondary">
+          <BookOpen className="w-12 h-12 mx-auto mb-4 text-border" />
+          <p className="font-medium">{disabledMessage}</p>
         </div>
       ) : papers.length === 0 ? (
         <div className="bg-card rounded-xl border border-border p-12 text-center text-text-secondary">

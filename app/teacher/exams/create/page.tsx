@@ -58,6 +58,8 @@ export default function TeacherCreateExamPage() {
   };
 
   const update = (field: string, value: any) => setForm({ ...form, [field]: value });
+  const isMock = form.examType !== 'internal';
+  const isJambMock = form.examType === 'jamb_mock';
 
   return (
     <DashboardLayout navItems={navItems} title="Create Exam" role="Teacher">
@@ -70,6 +72,16 @@ export default function TeacherCreateExamPage() {
           <h2 className="text-lg font-semibold text-text-primary">Exam Details</h2>
 
           <div>
+            <label className="block text-sm font-medium text-text-primary mb-1">Exam Type</label>
+            <select value={form.examType} onChange={(e) => update('examType', e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
+              <option value="internal">Internal Class Exam</option>
+              <option value="jamb_mock">JAMB Mock Question Bank</option>
+              <option value="waec_mock">WAEC Mock Paper</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-text-primary mb-1">Title</label>
             <input type="text" value={form.title} onChange={(e) => update('title', e.target.value)} required
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:ring-2 focus:ring-brand-indigo bg-background" placeholder="e.g. Weekly Quiz — Algebra" />
@@ -77,13 +89,15 @@ export default function TeacherCreateExamPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Subject</label>
+              <label className="block text-sm font-medium text-text-primary mb-1">{isJambMock ? 'Question Bank Subject' : 'Subject'}</label>
               <select value={form.subjectId} onChange={(e) => update('subjectId', e.target.value)} required
                 className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
                 <option value="">Select Subject</option>
                 {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
+            {!isMock && (
+              <>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Class Level</label>
               <select value={form.classLevelId} onChange={(e) => update('classLevelId', e.target.value)} required
@@ -108,15 +122,8 @@ export default function TeacherCreateExamPage() {
                 {terms.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Exam Type</label>
-              <select value={form.examType} onChange={(e) => update('examType', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
-                <option value="internal">Internal</option>
-                <option value="jamb_mock">JAMB Mock</option>
-                <option value="waec_mock">WAEC Mock</option>
-              </select>
-            </div>
+              </>
+            )}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Options per Question</label>
               <select value={form.optionsCount} onChange={(e) => update('optionsCount', parseInt(e.target.value))}
@@ -127,28 +134,40 @@ export default function TeacherCreateExamPage() {
             </div>
           </div>
 
-          <h3 className="text-md font-semibold text-text-primary pt-2">Scheduling</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Date</label>
-              <input type="date" value={form.scheduledDate} onChange={(e) => update('scheduledDate', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+          {isJambMock && (
+            <div className="rounded-lg border border-brand-indigo/20 bg-brand-indigo/5 p-4 text-sm text-text-secondary">
+              Students choose their JAMB subject combination on the JAMB Mock page. Create one approved question bank per subject here; English must exist for students to start a JAMB mock.
             </div>
+          )}
+
+          <h3 className="text-md font-semibold text-text-primary pt-2">{isMock ? 'Timing' : 'Scheduling'}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {!isMock && (
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">Date</label>
+                <input type="date" value={form.scheduledDate} onChange={(e) => update('scheduledDate', e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">Duration (minutes)</label>
               <input type="number" value={form.durationMinutes} onChange={(e) => update('durationMinutes', e.target.value)}
                 className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" min="1" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">Start Time</label>
-              <input type="time" value={form.startTime} onChange={(e) => update('startTime', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">End Time</label>
-              <input type="time" value={form.endTime} onChange={(e) => update('endTime', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
-            </div>
+            {!isMock && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">Start Time</label>
+                  <input type="time" value={form.startTime} onChange={(e) => update('startTime', e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">End Time</label>
+                  <input type="time" value={form.endTime} onChange={(e) => update('endTime', e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+                </div>
+              </>
+            )}
           </div>
         </div>
 

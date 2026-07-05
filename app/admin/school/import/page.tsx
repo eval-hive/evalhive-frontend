@@ -17,22 +17,28 @@ export default function AdminImportPage() {
   const [step, setStep] = useState<Step>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [selectedExamId, setSelectedExamId] = useState('');
+  const [targetType, setTargetType] = useState('internal');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [exams, setExams] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
   const [jobId, setJobId] = useState('');
   const [questions, setQuestions] = useState<any[]>([]);
   const [error, setError] = useState('');
   const [confirmedExamName, setConfirmedExamName] = useState('');
 
   useEffect(() => {
-    // Load approved exams for the import target dropdown
-    api.get('/exams?status=approved').then(res => {
-      setExams(res.data.exams || []);
+    Promise.all([
+      api.get('/exams?status=approved'),
+      api.get('/subjects')
+    ]).then(([examRes, subjectRes]) => {
+      setExams(examRes.data.exams || []);
+      setSubjects(subjectRes.data.subjects || []);
     }).catch(console.error);
   }, []);
 
   const handleUpload = async () => {
-    if (!file || !selectedExamId) {
-      setError('Please select a file and an exam target first.');
+    if (!file || (targetType === 'internal' && !selectedExamId) || (targetType !== 'internal' && !selectedSubjectId)) {
+      setError('Please select a file and question bank target first.');
       return;
     }
     setError('');
@@ -79,7 +85,9 @@ export default function AdminImportPage() {
     try {
       setStep('processing');
       const res = await api.post(`/admin/import/${jobId}/confirm`, {
-        examId: selectedExamId,
+        examType: targetType,
+        examId: targetType === 'internal' ? selectedExamId : undefined,
+        subjectId: targetType !== 'internal' ? selectedSubjectId : undefined,
         questions
       });
       setConfirmedExamName(res.data.message);
@@ -94,6 +102,8 @@ export default function AdminImportPage() {
     setStep('upload');
     setFile(null);
     setSelectedExamId('');
+    setTargetType('internal');
+    setSelectedSubjectId('');
     setJobId('');
     setQuestions([]);
     setError('');
@@ -112,20 +122,80 @@ export default function AdminImportPage() {
               Upload a Word (.docx) or PDF file containing multiple-choice questions. Our AI will extract and structure them for your review before import.
             </p>
 
-            {/* Exam selection */}
+            <div className="mb-6 rounded-xl border border-border bg-background p-4">
+              <h3 className="text-sm font-semibold text-text-primary mb-2">Upload guidelines</h3>
+              <div className="grid gap-4 text-xs text-text-secondary sm:grid-cols-2">
+                <div>
+                  <p className="font-medium text-text-primary mb-1">Do</p>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>Upload .docx or clear text-based PDF files.</li>
+                    <li>Number each question and label options A-D.</li>
+                    <li>Include the correct answer after each question where possible.</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-text-primary mb-1">Do not</p>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>Upload scanned images or handwritten pages.</li>
+                    <li>Mix multiple subjects in one upload.</li>
+                    <li>Import without reviewing answers and options first.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Question bank target */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-text-secondary mb-1">Which exam are these questions for?</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Where should these questions go?</label>
               <select
-                value={selectedExamId}
-                onChange={e => setSelectedExamId(e.target.value)}
+                value={targetType}
+                onChange={e => {
+                  setTargetType(e.target.value);
+                  setSelectedExamId('');
+                  setSelectedSubjectId('');
+                }}
                 className="w-full border border-border rounded-lg p-2.5 text-sm outline-none focus:border-brand-indigo"
               >
-                <option value="">Select an exam...</option>
-                {exams.map((exam: any) => (
-                  <option key={exam.id} value={exam.id}>{exam.title} ({exam.examType?.replace('_', ' ')})</option>
-                ))}
+                <option value="internal">Internal Exam</option>
+                <option value="jamb_mock">JAMB Mock Question Bank</option>
+                <option value="waec_mock">WAEC Mock Question Bank</option>
               </select>
             </div>
+
+            {targetType === 'internal' ? (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-text-secondary mb-1">Internal exam</label>
+                <select
+                  value={selectedExamId}
+                  onChange={e => setSelectedExamId(e.target.value)}
+                  className="w-full border border-border rounded-lg p-2.5 text-sm outline-none focus:border-brand-indigo"
+                >
+                  <option value="">Select an exam...</option>
+                  {exams.filter((exam: any) => exam.examType === 'internal').map((exam: any) => (
+                    <option key={exam.id} value={exam.id}>{exam.title}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-text-secondary mb-1">Subject</label>
+                <select
+                  value={selectedSubjectId}
+                  onChange={e => setSelectedSubjectId(e.target.value)}
+                  className="w-full border border-border rounded-lg p-2.5 text-sm outline-none focus:border-brand-indigo"
+                >
+                  <option value="">Select a subject...</option>
+                  {subjects.map((subject: any) => (
+                    <option key={subject.id} value={subject.id}>{subject.name}</option>
+                  ))}
+                </select>
+                {targetType === 'jamb_mock' && (
+                  <p className="mt-2 text-xs text-text-secondary">
+                    JAMB subjects become selectable for students only after this bank has at least 50 active questions.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* File drop zone */}
             <div
@@ -148,7 +218,7 @@ export default function AdminImportPage() {
 
             <button
               onClick={handleUpload}
-              disabled={!file || !selectedExamId}
+              disabled={!file || (targetType === 'internal' && !selectedExamId) || (targetType !== 'internal' && !selectedSubjectId)}
               className="mt-6 w-full py-3 bg-brand-indigo text-white rounded-xl font-bold hover:bg-brand-indigo/90 disabled:opacity-50"
             >
               Upload & Extract Questions →

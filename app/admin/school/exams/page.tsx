@@ -20,10 +20,17 @@ interface Exam {
   status: 'draft' | 'pending' | 'approved' | 'rejected';
   scheduledDate: string | null;
   subject: { name: string };
-  classLevel: { name: string };
+  classLevel: { name: string } | null;
   createdByTeacher: { firstName: string; lastName: string } | null;
   _count: { questions: number };
 }
+
+const formatExamScope = (exam: Exam) => {
+  if (exam.classLevel?.name) return exam.classLevel.name;
+  if (exam.examType === 'jamb_mock') return 'JAMB Mock Bank';
+  if (exam.examType === 'waec_mock') return 'WAEC Mock Bank';
+  return 'All students';
+};
 
 export default function ExamsListPage() {
   const router = useRouter();
@@ -90,7 +97,7 @@ export default function ExamsListPage() {
                   <tr key={exam.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-text-primary">{exam.title}</td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{exam.subject.name}</td>
-                    <td className="px-6 py-4 text-sm text-text-secondary">{exam.classLevel.name}</td>
+                    <td className="px-6 py-4 text-sm text-text-secondary">{formatExamScope(exam)}</td>
                     <td className="px-6 py-4"><ExamStatusBadge status={exam.status} /></td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{exam._count.questions}</td>
                     <td className="px-6 py-4 text-sm text-text-secondary">

@@ -70,6 +70,7 @@ export default function TeacherExamDetailPage() {
       setError(e.response?.data?.error || 'Failed to submit');
     } finally { setActionLoading(false); }
   };
+  const isMock = exam?.examType !== 'internal';
 
   if (loading || !exam) {
     return <DashboardLayout navItems={navItems} title="Exam Detail" role="Teacher">
@@ -105,11 +106,9 @@ export default function TeacherExamDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-semibold text-text-primary">{exam.title}</h2>
-              {['draft', 'rejected'].includes(exam.status) && (
-                <button onClick={() => setIsEditing(!isEditing)} className="text-xs text-brand-indigo hover:underline">
-                  {isEditing ? 'Cancel Edit' : 'Edit Settings'}
-                </button>
-              )}
+              <button onClick={() => setIsEditing(!isEditing)} className="text-xs text-brand-indigo hover:underline">
+                {isEditing ? 'Cancel Edit' : 'Edit Settings'}
+              </button>
             </div>
             <div className="flex items-center gap-3 mt-2">
               <ExamStatusBadge status={exam.status} />
@@ -140,6 +139,39 @@ export default function TeacherExamDetailPage() {
                   <option value={5}>5 Options (A-E)</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1">Duration (minutes)</label>
+                <input type="number" min="1" value={formData.durationMinutes} onChange={(e) => setFormData({...formData, durationMinutes: e.target.value})}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+              </div>
+              {!isMock && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">Date</label>
+                    <input type="date" value={formData.scheduledDate} onChange={(e) => setFormData({...formData, scheduledDate: e.target.value})}
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">Start Time</label>
+                    <input type="time" value={formData.startTime} onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">End Time</label>
+                    <input type="time" value={formData.endTime} onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">Result Visibility</label>
+                    <select value={formData.resultVisibility} onChange={(e) => setFormData({...formData, resultVisibility: e.target.value})}
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
+                      <option value="hidden">Hidden</option>
+                      <option value="score_only">Score Only</option>
+                      <option value="full_breakdown">Full Breakdown</option>
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
             <button onClick={handleUpdate} disabled={actionLoading}
               className="px-4 py-2 text-sm font-medium rounded-lg text-white bg-brand-indigo hover:bg-brand-indigo/90 transition-colors">
