@@ -169,7 +169,7 @@ export default function DashboardLayout({ children, navItems, title, role }: Das
   };
 
   return (
-    <div className="min-h-screen flex bg-background text-text-primary">
+    <div className="h-screen overflow-hidden flex bg-background text-text-primary">
       {/* Sidebar */}
       <div className="hidden md:flex w-72 flex-col fixed inset-y-0 bg-brand-indigo z-10 transition-all shadow-2xl shadow-brand-indigo/20">
         <div className="flex h-20 shrink-0 items-center px-6 border-b border-white/10">
@@ -205,9 +205,9 @@ export default function DashboardLayout({ children, navItems, title, role }: Das
       </div>
 
       {/* Main Content wrapper */}
-      <div className="flex flex-1 flex-col md:pl-72">
+      <div className="flex min-w-0 flex-1 flex-col md:pl-72">
         {/* Top Navbar */}
-        <header className="sticky top-0 z-10 flex h-20 flex-shrink-0 items-center gap-x-4 border-b border-border bg-white/90 px-4 backdrop-blur sm:gap-x-6 sm:px-6 lg:px-8">
+        <header className="z-10 flex h-20 flex-shrink-0 items-center gap-x-4 border-b border-border bg-white/90 px-4 backdrop-blur sm:gap-x-6 sm:px-6 lg:px-8">
           <button type="button" className="-m-2.5 p-2.5 text-text-secondary md:hidden">
             <span className="sr-only">Open sidebar</span>
             <Menu className="h-6 w-6" aria-hidden="true" />
@@ -245,7 +245,7 @@ export default function DashboardLayout({ children, navItems, title, role }: Das
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 pb-10">
+        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-10">
           <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[1500px] mx-auto">
             {children}
           </div>
