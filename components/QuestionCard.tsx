@@ -32,10 +32,10 @@ export default function QuestionCard({ index, question, onEdit, onDelete, readon
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+    <div className="bg-card border border-border rounded-lg p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
+          <span className="text-xs font-bold text-brand-indigo uppercase tracking-[0.12em]">
             Question {index + 1}
           </span>
           <p className="mt-1 text-sm text-text-primary font-medium leading-relaxed">
@@ -81,10 +81,10 @@ export default function QuestionCard({ index, question, onEdit, onDelete, readon
         {options.map((opt) => (
           <div
             key={opt.key}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm border ${
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm border ${
               question.correctOption === opt.key
                 ? 'border-brand-emerald bg-brand-emerald/5 text-brand-emerald font-medium'
-                : 'border-border text-text-primary'
+                : 'border-border bg-background text-text-primary'
             }`}
           >
             <span className={`inline-flex items-center justify-center h-5 w-5 rounded-full text-xs font-bold ${

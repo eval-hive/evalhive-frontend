@@ -98,7 +98,7 @@ export default function PlatformSchoolsPage() {
       </div>
 
       {showAddForm && (
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-6">
+        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-6">
           <h2 className="text-lg font-semibold text-text-primary mb-4">Create New School</h2>
           
           {error && (
@@ -203,7 +203,7 @@ export default function PlatformSchoolsPage() {
         </div>
       )}
 
-      <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+      <div className="bg-card rounded-lg border border-border overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         {isLoading ? (
           <div className="p-8 flex justify-center">
             <Loader2 className="h-8 w-8 text-brand-indigo animate-spin" />

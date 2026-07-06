@@ -57,23 +57,23 @@ export default function ResultsTable<T>({
 
   if (!data || data.length === 0) {
     return (
-      <div className="bg-card rounded-xl border border-border p-8 text-center text-text-secondary">
+      <div className="bg-card rounded-lg border border-border p-8 text-center text-text-secondary shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+    <div className="bg-card rounded-lg border border-border overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-border">
-          <thead className="bg-background-alt">
+          <thead className="bg-background">
             <tr>
               {columns.map((col, idx) => (
                 <th
                   key={idx}
                   scope="col"
-                  className={`px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider ${col.sortable ? 'cursor-pointer hover:bg-border/50' : ''}`}
+                  className={`px-6 py-3.5 text-left text-xs font-bold text-text-secondary uppercase tracking-[0.12em] ${col.sortable ? 'cursor-pointer hover:bg-border/50' : ''}`}
                   onClick={() => handleSort(col.accessorKey, col.sortable)}
                 >
                   <div className="flex items-center space-x-1">
@@ -93,7 +93,7 @@ export default function ResultsTable<T>({
               <tr 
                 key={rowIdx} 
                 onClick={() => onRowClick && onRowClick(row)}
-                className={onRowClick ? 'cursor-pointer hover:bg-background transition-colors' : ''}
+                className={onRowClick ? 'cursor-pointer hover:bg-background transition-colors' : 'hover:bg-background/60 transition-colors'}
               >
                 {columns.map((col, colIdx) => (
                   <td key={colIdx} className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">

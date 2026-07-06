@@ -41,7 +41,7 @@ export default function TeacherDashboard() {
   return (
     <DashboardLayout navItems={navItems} title="Teacher Dashboard" role="Subject Teacher">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-8">
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="flex items-center">
             <div className="p-3 rounded-md bg-brand-indigo/10">
               <FileText className="h-6 w-6 text-brand-indigo" />
@@ -53,7 +53,7 @@ export default function TeacherDashboard() {
           </div>
         </div>
         
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="flex items-center">
             <div className="p-3 rounded-md bg-brand-gold/10">
               <Clock className="h-6 w-6 text-brand-gold" />
@@ -65,7 +65,7 @@ export default function TeacherDashboard() {
           </div>
         </div>
         
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="flex items-center">
             <div className="p-3 rounded-md bg-brand-emerald/10">
               <CheckCircle className="h-6 w-6 text-brand-emerald" />
@@ -79,9 +79,9 @@ export default function TeacherDashboard() {
       </div>
 
       <h2 className="text-lg font-semibold text-text-primary mb-4">Quick Actions</h2>
-      <div className="bg-card rounded-xl border border-border p-8 text-center shadow-sm">
+      <div className="bg-card rounded-lg border border-border p-8 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <p className="text-text-secondary mb-6">You haven't created any exams yet.</p>
-        <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-brand-indigo hover:bg-brand-indigo/90 focus:outline-none">
+        <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-[0_1px_2px_rgba(17,24,39,0.04)] text-white bg-brand-indigo hover:bg-brand-indigo/90 focus:outline-none">
           Create New Exam
         </button>
       </div>

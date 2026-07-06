@@ -31,12 +31,12 @@ export default function TeacherExamsPage() {
       <div className="flex items-center justify-between mb-6">
         <p className="text-sm text-text-secondary">{exams.length} exam{exams.length !== 1 ? 's' : ''}</p>
         <button onClick={() => router.push('/teacher/exams/create')}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-brand-indigo hover:bg-brand-indigo/90 transition-colors shadow-sm">
+          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-brand-indigo hover:bg-brand-indigo/90 transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <Plus className="h-4 w-4 mr-2" /> Create Exam
         </button>
       </div>
 
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-text-secondary text-sm">Loading...</div>
         ) : exams.length === 0 ? (

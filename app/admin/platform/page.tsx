@@ -118,7 +118,7 @@ export default function SuperAdminDashboard() {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             {statCards.map(card => (
-              <div key={card.label} className="bg-card rounded-xl border border-border p-5 shadow-sm">
+              <div key={card.label} className="bg-card rounded-lg border border-border p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                 <div className={`w-10 h-10 rounded-lg bg-${card.color}/10 flex items-center justify-center mb-3`}>
                   <card.icon className={`w-5 h-5 text-${card.color}`} />
                 </div>
@@ -140,7 +140,7 @@ export default function SuperAdminDashboard() {
             </button>
           </div>
 
-          <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+          <div className="bg-card rounded-lg border border-border overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-border">
                 <thead className="bg-background">
@@ -210,7 +210,7 @@ export default function SuperAdminDashboard() {
       {/* Create School Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-card w-full max-w-md rounded-2xl shadow-xl border border-border p-8 relative">
+          <div className="bg-card w-full max-w-md rounded-lg shadow-xl border border-border p-8 relative">
             <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary">
               <X className="w-5 h-5" />
             </button>

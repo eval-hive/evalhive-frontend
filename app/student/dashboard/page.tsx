@@ -24,6 +24,7 @@ const navItems = [
 export default function StudentDashboard() {
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -31,8 +32,12 @@ export default function StudentDashboard() {
       try {
         const res = await api.get('/student/exams');
         setExams(res.data.exams);
-      } catch (err) {
-        console.error('Error fetching exams', err);
+      } catch (err: any) {
+        const status = err.response?.status;
+        setError(status === 403
+          ? 'This page is available to student accounts only.'
+          : err.response?.data?.error || 'Could not load your exams. Please try again.'
+        );
       } finally {
         setLoading(false);
       }
@@ -46,11 +51,17 @@ export default function StudentDashboard() {
         <h2 className="text-lg font-semibold text-text-primary mb-4">Active Exams</h2>
         
         {loading ? (
-          <div className="bg-card rounded-xl border border-border p-8 text-center shadow-sm">
+          <div className="bg-card rounded-lg border border-border p-8 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="animate-pulse h-6 w-32 bg-background-alt mx-auto rounded"></div>
           </div>
+        ) : error ? (
+          <div className="bg-card rounded-lg border border-border p-12 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <Monitor className="mx-auto h-12 w-12 text-text-secondary/40" />
+            <h3 className="mt-4 text-sm font-medium text-text-primary">Unable to load exams</h3>
+            <p className="mt-1 text-sm text-text-secondary">{error}</p>
+          </div>
         ) : exams.length === 0 ? (
-          <div className="bg-card rounded-xl border border-border p-12 text-center shadow-sm">
+          <div className="bg-card rounded-lg border border-border p-12 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <Monitor className="mx-auto h-12 w-12 text-text-secondary/40" />
             <h3 className="mt-4 text-sm font-medium text-text-primary">No exams available</h3>
             <p className="mt-1 text-sm text-text-secondary">
@@ -65,7 +76,7 @@ export default function StudentDashboard() {
               return (
                 <div 
                   key={exam.id} 
-                  className={`bg-card rounded-xl border p-6 shadow-sm transition-colors cursor-pointer group ${
+                  className={`bg-card rounded-lg border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] transition-colors cursor-pointer group ${
                     hasInProgress ? 'border-brand-indigo/50 bg-brand-indigo/5 hover:bg-brand-indigo/10' : 'border-border hover:border-brand-indigo/50'
                   }`}
                   onClick={() => router.push(hasInProgress ? `/student/exam/${exam.id}` : `/student/exam/${exam.id}`)}
@@ -111,7 +122,7 @@ export default function StudentDashboard() {
           
           <div
             onClick={() => router.push('/student/mock/jamb')}
-            className="bg-card rounded-xl border border-border p-6 shadow-sm hover:border-brand-indigo/50 transition-colors cursor-pointer"
+            className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-brand-indigo/50 transition-colors cursor-pointer"
           >
             <div className="flex justify-between items-start">
               <div>
@@ -124,7 +135,7 @@ export default function StudentDashboard() {
 
           <div
             onClick={() => router.push('/student/mock/waec')}
-            className="bg-card rounded-xl border border-border p-6 shadow-sm hover:border-brand-indigo/50 transition-colors cursor-pointer"
+            className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-brand-indigo/50 transition-colors cursor-pointer"
           >
              <div className="flex justify-between items-start">
               <div>

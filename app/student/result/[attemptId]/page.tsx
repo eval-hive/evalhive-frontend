@@ -21,8 +21,8 @@ export default function ExamResult() {
         // Well, the submit hook already sets it to submitted.
         // Wait, backend `resume` might auto-submit if time expired, or return the attempt.
         setResult(res.data.attempt);
-      } catch (err) {
-        console.error(err);
+      } catch {
+        router.push('/student/dashboard');
       } finally {
         setLoading(false);
       }
@@ -39,8 +39,7 @@ export default function ExamResult() {
          // But we can trigger submit again. It's idempotent and returns the full result.
          const res = await api.post(`/student/attempts/${attemptId}/submit`);
          setResult(res.data.result);
-       } catch (err) {
-         console.error('Failed to get result', err);
+       } catch {
          router.push('/student/dashboard');
        } finally {
          setLoading(false);
@@ -78,7 +77,7 @@ export default function ExamResult() {
           Back to Dashboard
         </button>
 
-        <div className="bg-card rounded-2xl border border-border p-8 md:p-12 text-center shadow-sm">
+        <div className="bg-card rounded-lg border border-border p-8 md:p-12 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>
@@ -86,22 +85,22 @@ export default function ExamResult() {
           <p className="text-text-secondary mb-8 text-lg">You have completed the <strong className="text-text-primary">{result.exam.title}</strong> exam.</p>
 
           {!showScore && (
-             <div className="bg-background-alt p-6 rounded-xl inline-block text-left border">
+             <div className="bg-background-alt p-6 rounded-lg inline-block text-left border">
                <p className="text-text-primary font-medium">Your results will be published soon by your teacher.</p>
              </div>
           )}
 
           {showScore && (
             <div className="flex flex-wrap justify-center gap-6 mt-6">
-              <div className="bg-background-alt p-6 rounded-2xl min-w-[200px] border border-border shadow-sm">
+              <div className="bg-background-alt p-6 rounded-lg min-w-[200px] border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                  <p className="text-sm font-medium text-text-secondary mb-1">Your Score</p>
                  <p className="text-4xl font-bold text-brand-indigo">{result.score} <span className="text-xl text-text-secondary font-medium">/ {result.totalQuestions}</span></p>
               </div>
-              <div className="bg-background-alt p-6 rounded-2xl min-w-[200px] border border-border shadow-sm">
+              <div className="bg-background-alt p-6 rounded-lg min-w-[200px] border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                  <p className="text-sm font-medium text-text-secondary mb-1">Percentage</p>
                  <p className="text-4xl font-bold text-brand-indigo">{percentage}%</p>
               </div>
-              <div className="bg-background-alt p-6 rounded-2xl min-w-[200px] border border-border shadow-sm">
+              <div className="bg-background-alt p-6 rounded-lg min-w-[200px] border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                  <p className="text-sm font-medium text-text-secondary mb-1">Time Taken</p>
                  <p className="text-4xl font-bold text-text-primary">{Math.floor(result.timeTakenSeconds / 60)}m {result.timeTakenSeconds % 60}s</p>
               </div>
@@ -116,7 +115,7 @@ export default function ExamResult() {
                const q = ans.question;
                const isCorrect = ans.isCorrect;
                return (
-                 <div key={ans.id} className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                 <div key={ans.id} className="bg-card border border-border rounded-lg p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                     <div className="flex items-start">
                        <div className="mt-1 mr-4 shrink-0">
                           {isCorrect ? <CheckCircle className="w-6 h-6 text-green-500" /> : <XCircle className="w-6 h-6 text-red-500" />}

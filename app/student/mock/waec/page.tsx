@@ -27,8 +27,12 @@ export default function WaecMockPage() {
           setDisabledMessage(res.data.message || 'WAEC mock is currently disabled by your school.');
         }
         setPapers(res.data.papers || []);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        const status = err.response?.status;
+        setError(status === 403
+          ? 'This page is available to student accounts only.'
+          : err.response?.data?.error || 'Could not load WAEC mock papers. Please try again.'
+        );
       } finally {
         setLoading(false);
       }
@@ -59,13 +63,19 @@ export default function WaecMockPage() {
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-brand-indigo" />
         </div>
+      ) : error ? (
+        <div className="bg-card rounded-lg border border-border p-12 text-center text-text-secondary">
+          <BookOpen className="w-12 h-12 mx-auto mb-4 text-border" />
+          <p className="font-medium text-text-primary">Unable to load WAEC mock</p>
+          <p className="text-sm mt-2">{error}</p>
+        </div>
       ) : disabledMessage ? (
-        <div className="bg-card rounded-xl border border-border p-12 text-center text-text-secondary">
+        <div className="bg-card rounded-lg border border-border p-12 text-center text-text-secondary">
           <BookOpen className="w-12 h-12 mx-auto mb-4 text-border" />
           <p className="font-medium">{disabledMessage}</p>
         </div>
       ) : papers.length === 0 ? (
-        <div className="bg-card rounded-xl border border-border p-12 text-center text-text-secondary">
+        <div className="bg-card rounded-lg border border-border p-12 text-center text-text-secondary">
           <BookOpen className="w-12 h-12 mx-auto mb-4 text-border" />
           <p className="font-medium">No WAEC mock papers are available yet.</p>
           <p className="text-sm mt-2">Ask your school admin to set up WAEC mock papers.</p>
@@ -86,7 +96,7 @@ export default function WaecMockPage() {
                 : null;
 
               return (
-                <div key={paper.id} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+                <div key={paper.id} className="bg-card rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
                   <div className="p-6">
                     <div className="w-10 h-10 rounded-lg bg-brand-indigo/10 flex items-center justify-center mb-4">
                       <BookOpen className="w-5 h-5 text-brand-indigo" />

@@ -143,7 +143,7 @@ export default function ClassTeacherPage() {
   if (error) {
     return (
       <DashboardLayout navItems={[{ name: 'Dashboard', href: '/teacher/dashboard', icon: FileText }, { name: 'My Class', href: '/teacher/class', icon: Users }]} title="My Class" role="Teacher">
-         <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-xl mt-8 text-center max-w-2xl mx-auto shadow-sm">
+         <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-lg mt-8 text-center max-w-2xl mx-auto shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <Users className="w-12 h-12 text-red-400 mx-auto mb-4" />
             <h3 className="text-lg font-bold mb-2">Access Denied</h3>
             <p>{error}</p>

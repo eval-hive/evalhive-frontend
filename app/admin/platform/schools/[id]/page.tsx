@@ -121,7 +121,7 @@ export default function SchoolPreviewPage({ params }: { params: Promise<{ id: st
 
       {/* School Info */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="col-span-2 bg-card rounded-xl border border-border p-6 shadow-sm">
+        <div className="col-span-2 bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <h3 className="text-lg font-bold text-text-primary mb-4">{school.name}</h3>
           <div className="space-y-2 text-sm">
             <p><span className="font-medium text-text-secondary w-32 inline-block">Slug:</span> <span className="font-mono text-text-primary">{school.slug}</span></p>
@@ -142,7 +142,7 @@ export default function SchoolPreviewPage({ params }: { params: Promise<{ id: st
             { label: 'Teachers', value: school._count?.teachers || 0, icon: Users, color: 'brand-indigo' },
             { label: 'Exams Taken', value: school._count?.examAttempts || 0, icon: FileSpreadsheet, color: 'brand-gold' },
           ].map(stat => (
-            <div key={stat.label} className="bg-card rounded-xl border border-border p-4 shadow-sm flex items-center gap-4">
+            <div key={stat.label} className="bg-card rounded-lg border border-border p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex items-center gap-4">
               <div className={`w-10 h-10 rounded-lg bg-${stat.color}/10 flex items-center justify-center`}>
                 <stat.icon className={`w-5 h-5 text-${stat.color}`} />
               </div>
@@ -158,7 +158,7 @@ export default function SchoolPreviewPage({ params }: { params: Promise<{ id: st
       {/* Admin Users */}
       <div className="mb-10">
         <h3 className="text-lg font-bold text-text-primary mb-3">School Admins</h3>
-        <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+        <div className="bg-card rounded-lg border border-border overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-background">
               <tr>

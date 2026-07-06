@@ -116,13 +116,13 @@ export default function AdminImportPage() {
 
       {step === 'upload' && (
         <div className="max-w-2xl mx-auto">
-          <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
+          <div className="bg-card rounded-lg border border-border p-8 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <h2 className="text-xl font-bold text-text-primary mb-2">AI-Assisted Question Import</h2>
             <p className="text-text-secondary text-sm mb-8">
               Upload a Word (.docx) or PDF file containing multiple-choice questions. Our AI will extract and structure them for your review before import.
             </p>
 
-            <div className="mb-6 rounded-xl border border-border bg-background p-4">
+            <div className="mb-6 rounded-lg border border-border bg-background p-4">
               <h3 className="text-sm font-semibold text-text-primary mb-2">Upload guidelines</h3>
               <div className="grid gap-4 text-xs text-text-secondary sm:grid-cols-2">
                 <div>
@@ -200,7 +200,7 @@ export default function AdminImportPage() {
             {/* File drop zone */}
             <div
               onClick={() => fileRef.current?.click()}
-              className="border-2 border-dashed border-border rounded-xl p-10 text-center cursor-pointer hover:border-brand-indigo/50 transition-colors"
+              className="border-2 border-dashed border-border rounded-lg p-10 text-center cursor-pointer hover:border-brand-indigo/50 transition-colors"
             >
               <UploadCloud className="w-10 h-10 text-text-secondary mx-auto mb-3" />
               <p className="font-medium text-text-primary">{file ? file.name : 'Click to select a file'}</p>
@@ -219,7 +219,7 @@ export default function AdminImportPage() {
             <button
               onClick={handleUpload}
               disabled={!file || (targetType === 'internal' && !selectedExamId) || (targetType !== 'internal' && !selectedSubjectId)}
-              className="mt-6 w-full py-3 bg-brand-indigo text-white rounded-xl font-bold hover:bg-brand-indigo/90 disabled:opacity-50"
+              className="mt-6 w-full py-3 bg-brand-indigo text-white rounded-lg font-bold hover:bg-brand-indigo/90 disabled:opacity-50"
             >
               Upload & Extract Questions →
             </button>
@@ -260,7 +260,7 @@ export default function AdminImportPage() {
 
           <div className="space-y-6">
             {questions.map((q, idx) => (
-              <div key={idx} className="bg-card border border-border rounded-xl p-6 shadow-sm">
+              <div key={idx} className="bg-card border border-border rounded-lg p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                 <div className="flex items-start justify-between mb-4">
                   <span className="font-bold text-brand-indigo text-sm">Q{idx + 1}</span>
                   <button onClick={() => handleDeleteQuestion(idx)} className="text-text-secondary hover:text-red-500 transition-colors">
@@ -312,7 +312,7 @@ export default function AdminImportPage() {
             <button
               onClick={handleConfirm}
               disabled={questions.length === 0}
-              className="px-6 py-3 bg-brand-emerald text-white rounded-xl font-bold hover:bg-brand-emerald/90 disabled:opacity-50"
+              className="px-6 py-3 bg-brand-emerald text-white rounded-lg font-bold hover:bg-brand-emerald/90 disabled:opacity-50"
             >
               Confirm Import ({questions.length} Questions) →
             </button>

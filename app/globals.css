@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-indigo: #1E3A8A;
-  --color-brand-gold: #F59E0B;
+  --color-primary: #2B317F;
+  --color-secondary: #F9A51A;
+  --color-accent: #6B7280;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+  --color-brand-indigo: #2B317F;
+  --color-brand-gold: #F9A51A;
   --color-brand-emerald: #10B981;
   --color-brand-red: #EF4444;
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
@@ -10,15 +17,18 @@
 
 :root {
   --background: #F9FAFB;
+  --background-alt: #F3F4F6;
   --foreground: #111827;
   --card: #FFFFFF;
   --border: #E5E7EB;
   --text-primary: #111827;
   --text-secondary: #6B7280;
+  --ring: #2B317F;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-alt: var(--background-alt);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-border: var(--border);
@@ -31,4 +41,28 @@ body {
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in srgb, #2B317F 18%, transparent);
+  color: #111827;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  outline-color: var(--ring);
+}
+
+input,
+select,
+textarea {
+  color: var(--text-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9CA3AF;
 }

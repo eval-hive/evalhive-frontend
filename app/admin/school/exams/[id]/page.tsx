@@ -121,14 +121,14 @@ export default function ExamDetailPage() {
 
       {/* Rejection Banner */}
       {exam.status === 'rejected' && exam.rejectionReason && (
-        <div className="mb-4 bg-brand-red/5 border border-brand-red/30 rounded-xl p-4">
+        <div className="mb-4 bg-brand-red/5 border border-brand-red/30 rounded-lg p-4">
           <p className="text-sm font-medium text-brand-red">Rejection Reason:</p>
           <p className="text-sm text-text-primary mt-1">{exam.rejectionReason}</p>
         </div>
       )}
 
       {/* Exam Info Card */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-6">
+      <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-6">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3">
@@ -247,7 +247,7 @@ export default function ExamDetailPage() {
 
       {/* Rejection Reason Modal */}
       {showReject && (
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-6">
+        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-6">
           <h3 className="text-md font-semibold text-text-primary mb-3">Rejection Reason</h3>
           <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3}
             className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background resize-none" placeholder="Explain why this exam is being rejected..." />
@@ -260,7 +260,7 @@ export default function ExamDetailPage() {
 
       {/* Reassign Modal */}
       {showReassign && (
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-6">
+        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-6">
           <h3 className="text-md font-semibold text-text-primary mb-3">Reassign to Teacher</h3>
           <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)}
             className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
@@ -278,7 +278,7 @@ export default function ExamDetailPage() {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-text-primary">Questions ({exam.questions?.length || 0})</h3>
         {exam.questions?.length === 0 ? (
-          <div className="text-center py-8 text-text-secondary text-sm bg-card rounded-xl border border-border">No questions added yet.</div>
+          <div className="text-center py-8 text-text-secondary text-sm bg-card rounded-lg border border-border">No questions added yet.</div>
         ) : (
           exam.questions.map((q: any, i: number) => (
             <QuestionCard key={q.id} index={i} question={q} readonly />

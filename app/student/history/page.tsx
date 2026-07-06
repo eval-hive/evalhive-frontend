@@ -12,14 +12,18 @@ export default function StudentHistory() {
   
   const [attempts, setAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
         const res = await api.get('/student/history');
         setAttempts(res.data.attempts || []);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        setError(err.response?.status === 403
+          ? 'This page is available to student accounts only.'
+          : err.response?.data?.error || 'Could not load exam history. Please try again.'
+        );
       } finally {
         setLoading(false);
       }
@@ -109,12 +113,20 @@ export default function StudentHistory() {
          </p>
       </div>
 
-      <ResultsTable 
-         data={attempts} 
-         columns={columns} 
-         emptyMessage="You haven't completed any exams yet." 
-         onRowClick={(row) => router.push(`/student/result/${row.id}`)}
-      />
+      {error ? (
+         <div className="bg-card rounded-lg border border-border p-12 text-center text-text-secondary shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <History className="w-12 h-12 mx-auto mb-4 text-border" />
+            <p className="font-medium text-text-primary">Unable to load exam history</p>
+            <p className="text-sm mt-2">{error}</p>
+         </div>
+      ) : (
+         <ResultsTable 
+            data={attempts} 
+            columns={columns} 
+            emptyMessage="You haven't completed any exams yet." 
+            onRowClick={(row) => router.push(`/student/result/${row.id}`)}
+         />
+      )}
 
     </DashboardLayout>
   );

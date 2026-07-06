@@ -78,7 +78,7 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-xl shadow-sm border border-border">
+      <div className="max-w-md w-full space-y-8 bg-card p-10 rounded-lg shadow-[0_1px_2px_rgba(17,24,39,0.04)] border border-border">
         <div className="text-center">
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-brand-gold/20 mb-4">
             <ShieldCheck className="h-6 w-6 text-brand-gold" />
@@ -149,7 +149,7 @@ export default function ChangePasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-brand-gold hover:bg-brand-gold/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-gold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+              className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-brand-gold hover:bg-brand-gold/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-gold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
             >
               {isLoading ? (
                 <>

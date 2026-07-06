@@ -91,7 +91,7 @@ export default function TeacherExamDetailPage() {
 
       {/* Rejection Banner */}
       {exam.status === 'rejected' && exam.rejectionReason && (
-        <div className="mb-4 bg-brand-red/5 border border-brand-red/30 rounded-xl p-4 flex items-start gap-3">
+        <div className="mb-4 bg-brand-red/5 border border-brand-red/30 rounded-lg p-4 flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-brand-red flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-medium text-brand-red">This exam was rejected</p>
@@ -101,7 +101,7 @@ export default function TeacherExamDetailPage() {
       )}
 
       {/* Exam Info Card */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-6">
+      <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-6">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3">
@@ -205,7 +205,7 @@ export default function TeacherExamDetailPage() {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-text-primary">Questions ({exam.questions?.length || 0})</h3>
         {exam.questions?.length === 0 ? (
-          <div className="text-center py-8 text-text-secondary text-sm bg-card rounded-xl border border-border">No questions added yet.</div>
+          <div className="text-center py-8 text-text-secondary text-sm bg-card rounded-lg border border-border">No questions added yet.</div>
         ) : (
           exam.questions.map((q: any, i: number) => (
             <QuestionCard key={q.id} index={i} question={q} readonly />

@@ -33,8 +33,12 @@ export default function JambMockPage() {
         // Auto-select English Literature
         const english = allSubjects.find((s: any) => s.name.toLowerCase().includes(ENGLISH_KEYWORD));
         if (english) setSelected([english.id]);
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        const status = err.response?.status;
+        setError(status === 403
+          ? 'This page is available to student accounts only.'
+          : err.response?.data?.error || 'Could not load JAMB mock subjects. Please try again.'
+        );
       } finally {
         setLoading(false);
       }
@@ -76,13 +80,19 @@ export default function JambMockPage() {
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-brand-indigo" />
         </div>
+      ) : error ? (
+        <div className="bg-card rounded-lg border border-border p-12 text-center text-text-secondary">
+          <BookOpen className="w-12 h-12 mx-auto mb-4 text-border" />
+          <p className="font-medium text-text-primary">Unable to load JAMB mock</p>
+          <p className="text-sm mt-2">{error}</p>
+        </div>
       ) : disabledMessage ? (
-        <div className="bg-card rounded-xl border border-border p-12 text-center text-text-secondary">
+        <div className="bg-card rounded-lg border border-border p-12 text-center text-text-secondary">
           <BookOpen className="w-12 h-12 mx-auto mb-4 text-border" />
           <p className="font-medium">{disabledMessage}</p>
         </div>
       ) : subjects.length === 0 ? (
-        <div className="bg-card rounded-xl border border-border p-12 text-center text-text-secondary">
+        <div className="bg-card rounded-lg border border-border p-12 text-center text-text-secondary">
           <BookOpen className="w-12 h-12 mx-auto mb-4 text-border" />
           <p className="font-medium">No JAMB mock subjects are available yet.</p>
           <p className="text-sm mt-2">A subject appears here after its JAMB question bank has at least 50 questions.</p>
@@ -90,7 +100,7 @@ export default function JambMockPage() {
       ) : (
         <div className="max-w-3xl mx-auto">
           {/* Instructions */}
-          <div className="bg-brand-indigo/5 border border-brand-indigo/20 rounded-xl p-6 mb-8">
+          <div className="bg-brand-indigo/5 border border-brand-indigo/20 rounded-lg p-6 mb-8">
             <h2 className="text-lg font-bold text-brand-indigo mb-3">Instructions</h2>
             <ul className="space-y-2 text-sm text-text-secondary list-disc list-inside">
               <li>Select <strong>4 subjects</strong> in total — English is compulsory and pre-selected.</li>
@@ -120,7 +130,7 @@ export default function JambMockPage() {
                   onClick={() => handleToggle(subject.id)}
                   disabled={isDisabled}
                   className={`
-                    relative p-4 rounded-xl border-2 text-left transition-all
+                    relative p-4 rounded-lg border-2 text-left transition-all
                     ${isSelected
                       ? 'border-brand-indigo bg-brand-indigo/5'
                       : isDisabled
@@ -145,7 +155,7 @@ export default function JambMockPage() {
           <button
             onClick={handleStart}
             disabled={selected.length !== 4 || starting}
-            className="w-full py-3 bg-brand-indigo text-white rounded-xl font-bold text-base hover:bg-brand-indigo/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="w-full py-3 bg-brand-indigo text-white rounded-lg font-bold text-base hover:bg-brand-indigo/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             {starting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
             {starting ? 'Starting Exam...' : 'Start JAMB Mock Exam →'}

@@ -156,7 +156,7 @@ export default function ExamQuestionsPage() {
 
         {exam?.status === 'draft' && questions.length > 0 && (
           <button onClick={approveExam} disabled={saving}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-brand-emerald hover:bg-brand-emerald/90 transition-colors shadow-sm">
+            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-brand-emerald hover:bg-brand-emerald/90 transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             Publish & Approve Exam
           </button>
         )}
@@ -173,7 +173,7 @@ export default function ExamQuestionsPage() {
         {loading ? (
           <div className="text-center py-8 text-text-secondary text-sm">Loading...</div>
         ) : questions.length === 0 ? (
-          <div className="text-center py-8 text-text-secondary text-sm bg-card rounded-xl border border-border">No questions yet. Add your first question below.</div>
+          <div className="text-center py-8 text-text-secondary text-sm bg-card rounded-lg border border-border">No questions yet. Add your first question below.</div>
         ) : (
           questions.map((q, i) => (
             <QuestionCard key={q.id} index={i} question={q} onEdit={startEdit} onDelete={deleteQuestion} />
@@ -182,7 +182,7 @@ export default function ExamQuestionsPage() {
       </div>
 
       {/* Add/Edit Question Form */}
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+      <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="mb-6 flex gap-2">
           <button onClick={() => setEntryMode('manual')} className={`px-4 py-2 rounded-lg text-sm font-medium ${entryMode === 'manual' ? 'bg-brand-indigo text-white' : 'border border-border text-text-secondary'}`}>
             Input Manually
@@ -194,7 +194,7 @@ export default function ExamQuestionsPage() {
 
         {entryMode === 'upload' ? (
           <div className="space-y-5">
-            <div className="rounded-xl border border-border bg-background p-4">
+            <div className="rounded-lg border border-border bg-background p-4">
               <h3 className="text-sm font-semibold text-text-primary mb-2">Upload guidelines</h3>
               <div className="grid gap-4 text-xs text-text-secondary sm:grid-cols-2">
                 <div>
@@ -215,7 +215,7 @@ export default function ExamQuestionsPage() {
                 </div>
               </div>
             </div>
-            <div className="border-2 border-dashed border-border rounded-xl p-8 text-center">
+            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
               <UploadCloud className="w-10 h-10 text-text-secondary mx-auto mb-3" />
               <input type="file" accept=".docx" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} className="mx-auto text-sm" />
             </div>
@@ -232,7 +232,7 @@ export default function ExamQuestionsPage() {
                   </button>
                 </div>
                 {extractedQuestions.map((q, idx) => (
-                  <div key={idx} className="border border-border rounded-xl p-4 space-y-3">
+                  <div key={idx} className="border border-border rounded-lg p-4 space-y-3">
                     <div className="flex justify-between">
                       <span className="text-sm font-semibold text-brand-indigo">Q{idx + 1}</span>
                       <button onClick={() => setExtractedQuestions(prev => prev.filter((_, i) => i !== idx))} className="text-text-secondary hover:text-brand-red">

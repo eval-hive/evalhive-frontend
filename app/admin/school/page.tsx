@@ -82,7 +82,7 @@ export default function SchoolAdminDashboard() {
           { label: 'Pending Exams', value: '0', color: 'gold' },
           { label: 'Published Results', value: '0', color: 'indigo' },
         ].map((stat) => (
-          <div key={stat.label} className="bg-card rounded-xl border border-border p-5 shadow-sm">
+          <div key={stat.label} className="bg-card rounded-lg border border-border p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <p className="text-sm font-medium text-text-secondary">{stat.label}</p>
             <p className="mt-2 text-3xl font-bold text-text-primary">{stat.value}</p>
           </div>
@@ -96,7 +96,7 @@ export default function SchoolAdminDashboard() {
             { key: 'jambMockEnabled' as const, title: 'JAMB Mock', description: 'Allow students to take JAMB mock practice anytime.' },
             { key: 'waecMockEnabled' as const, title: 'WAEC Mock', description: 'Allow students to take WAEC mock papers anytime.' },
           ].map(item => (
-            <div key={item.key} className="bg-card rounded-xl border border-border p-5 shadow-sm flex items-center justify-between gap-4">
+            <div key={item.key} className="bg-card rounded-lg border border-border p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex items-center justify-between gap-4">
               <div>
                 <h3 className="font-medium text-text-primary">{item.title}</h3>
                 <p className="text-sm text-text-secondary mt-1">{item.description}</p>
@@ -119,7 +119,7 @@ export default function SchoolAdminDashboard() {
           {/* CSV Import Students placeholder card */}
           <div
             onClick={() => router.push('/admin/school/import')}
-            className="bg-card rounded-xl border border-border p-6 shadow-sm flex flex-col items-center justify-center text-center hover:border-brand-indigo/50 transition-colors cursor-pointer"
+            className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex flex-col items-center justify-center text-center hover:border-brand-indigo/50 transition-colors cursor-pointer"
           >
             <div className="h-12 w-12 rounded-full bg-brand-indigo/10 flex items-center justify-center mb-4">
               <UploadCloud className="h-6 w-6 text-brand-indigo" />
@@ -134,7 +134,7 @@ export default function SchoolAdminDashboard() {
           </div>
 
           {/* CSV Import Teachers placeholder card */}
-          <div className="bg-card rounded-xl border border-border p-6 shadow-sm flex flex-col items-center justify-center text-center hover:border-brand-emerald/50 transition-colors cursor-pointer">
+          <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex flex-col items-center justify-center text-center hover:border-brand-emerald/50 transition-colors cursor-pointer">
             <div className="h-12 w-12 rounded-full bg-brand-emerald/10 flex items-center justify-center mb-4">
               <UploadCloud className="h-6 w-6 text-brand-emerald" />
             </div>

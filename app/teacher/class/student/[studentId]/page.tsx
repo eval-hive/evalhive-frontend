@@ -126,7 +126,7 @@ export default function ClassTeacherStudentPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-         <div className="col-span-1 md:col-span-1 bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col justify-center items-center text-center">
+         <div className="col-span-1 md:col-span-1 bg-card p-6 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex flex-col justify-center items-center text-center">
             <div className="w-16 h-16 rounded-full bg-brand-indigo/10 flex items-center justify-center mb-4">
                <UserIcon className="w-8 h-8 text-brand-indigo" />
             </div>
@@ -134,7 +134,7 @@ export default function ClassTeacherStudentPage({ params }: { params: Promise<{ 
             <p className="text-sm text-text-secondary mt-1">{student.admissionNumber}</p>
          </div>
 
-         <div className="col-span-1 md:col-span-3 bg-card p-6 rounded-xl border border-border shadow-sm">
+         <div className="col-span-1 md:col-span-3 bg-card p-6 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <h3 className="text-sm font-semibold text-text-secondary uppercase mb-4">Subject Averages</h3>
             {subjectStats.length > 0 ? (
                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

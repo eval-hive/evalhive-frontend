@@ -124,19 +124,19 @@ export default function AdminExamResultDetail({ params }: { params: Promise<{ ex
 
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-          <div className="bg-card p-5 rounded-xl border border-border shadow-sm">
+          <div className="bg-card p-5 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <p className="text-xs font-medium text-text-secondary uppercase">Students</p>
             <p className="mt-2 text-2xl font-bold text-text-primary">{stats.totalStudents}</p>
           </div>
-          <div className="bg-card p-5 rounded-xl border border-border shadow-sm">
+          <div className="bg-card p-5 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <p className="text-xs font-medium text-text-secondary uppercase">Class Average</p>
             <p className="mt-2 text-2xl font-bold text-brand-indigo">{stats.averageScore.toFixed(1)} <span className="text-sm font-normal text-text-secondary">/ {exam.questions.length}</span></p>
           </div>
-          <div className="bg-card p-5 rounded-xl border border-border shadow-sm">
+          <div className="bg-card p-5 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <p className="text-xs font-medium text-text-secondary uppercase">Highest</p>
             <p className="mt-2 text-2xl font-bold text-green-600">{stats.highestScore}</p>
           </div>
-          <div className="bg-card p-5 rounded-xl border border-border shadow-sm">
+          <div className="bg-card p-5 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <p className="text-xs font-medium text-text-secondary uppercase">Lowest</p>
             <p className="mt-2 text-2xl font-bold text-red-500">{stats.lowestScore}</p>
           </div>
@@ -145,7 +145,7 @@ export default function AdminExamResultDetail({ params }: { params: Promise<{ ex
 
       {/* Per Question Analysis */}
       <h3 className="text-lg font-bold text-text-primary mb-4">Per-Question Analysis</h3>
-      <div className="bg-card rounded-xl border border-border p-6 shadow-sm mb-10 overflow-hidden">
+      <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-10 overflow-hidden">
          {questionAnalysis && questionAnalysis.length > 0 ? (
             <div className="space-y-6">
                {questionAnalysis.map((qa: any, idx: number) => (

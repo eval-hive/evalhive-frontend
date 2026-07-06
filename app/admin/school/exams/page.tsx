@@ -66,13 +66,13 @@ export default function ExamsListPage() {
           </select>
         </div>
         <button onClick={() => router.push('/admin/school/exams/create')}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-brand-indigo hover:bg-brand-indigo/90 transition-colors shadow-sm">
+          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-brand-indigo hover:bg-brand-indigo/90 transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <Plus className="h-4 w-4 mr-2" /> Create Exam
         </button>
       </div>
 
       {/* Exam Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-text-secondary text-sm">Loading exams...</div>
         ) : exams.length === 0 ? (

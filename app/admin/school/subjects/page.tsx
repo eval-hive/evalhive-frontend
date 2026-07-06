@@ -95,7 +95,7 @@ export default function SubjectsPage() {
       )}
 
       {/* Create Subject */}
-      <div className="bg-card rounded-xl border border-border p-6 mb-6 shadow-sm">
+      <div className="bg-card rounded-lg border border-border p-6 mb-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <h2 className="text-lg font-semibold text-text-primary mb-4">Add Subject</h2>
         <div className="flex gap-3">
           <input
@@ -111,7 +111,7 @@ export default function SubjectsPage() {
       </div>
 
       {/* Subject List */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-lg font-semibold text-text-primary">Subjects ({subjects.length})</h2>
           <button onClick={() => setShowAssign(!showAssign)}
@@ -152,7 +152,7 @@ export default function SubjectsPage() {
 
       {/* Assign Teacher Modal */}
       {showAssign && (
-        <div className="mt-6 bg-card rounded-xl border border-border p-6 shadow-sm">
+        <div className="mt-6 bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <h3 className="text-md font-semibold text-text-primary mb-4">Assign Subject to Teacher</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <select value={assignForm.teacherId} onChange={(e) => setAssignForm({...assignForm, teacherId: e.target.value})}

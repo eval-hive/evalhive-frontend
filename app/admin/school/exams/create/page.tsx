@@ -78,7 +78,7 @@ export default function CreateExamPage() {
           <div className="mb-4 bg-brand-red/10 border-l-4 border-brand-red p-3 rounded-md text-sm text-brand-red">{error}</div>
         )}
 
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm space-y-5">
+        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] space-y-5">
           <h2 className="text-lg font-semibold text-text-primary">Exam Details</h2>
 
           <div>
@@ -199,7 +199,7 @@ export default function CreateExamPage() {
 
         <div className="mt-6 flex gap-3">
           <button type="submit" disabled={loading}
-            className="inline-flex items-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-brand-indigo hover:bg-brand-indigo/90 transition-colors disabled:opacity-70 shadow-sm">
+            className="inline-flex items-center px-6 py-2.5 text-sm font-medium rounded-lg text-white bg-brand-indigo hover:bg-brand-indigo/90 transition-colors disabled:opacity-70 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             {loading ? <><Loader2 className="animate-spin h-4 w-4 mr-2" />Creating...</> : 'Create & Add Questions'}
           </button>
           <button type="button" onClick={() => router.back()}

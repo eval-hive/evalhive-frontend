@@ -8,14 +8,18 @@ import api from '@/lib/api';
 export default function StudentMockAnalytics() {
   const [analytics, setAnalytics] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
         const res = await api.get('/student/mock-analytics');
         setAnalytics(res.data.analytics || {});
-      } catch (err) {
-        console.error(err);
+      } catch (err: any) {
+        setError(err.response?.status === 403
+          ? 'This page is available to student accounts only.'
+          : err.response?.data?.error || 'Could not load mock analytics. Please try again.'
+        );
       } finally {
         setLoading(false);
       }
@@ -51,8 +55,14 @@ export default function StudentMockAnalytics() {
          </p>
       </div>
 
-      {subjects.length === 0 ? (
-         <div className="bg-card rounded-xl border border-border p-12 text-center text-text-secondary shadow-sm">
+      {error ? (
+         <div className="bg-card rounded-lg border border-border p-12 text-center text-text-secondary shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <BarChart2 className="w-12 h-12 mx-auto mb-4 text-border" />
+            <p className="font-medium text-text-primary">Unable to load analytics</p>
+            <p className="text-sm mt-2">{error}</p>
+         </div>
+      ) : subjects.length === 0 ? (
+         <div className="bg-card rounded-lg border border-border p-12 text-center text-text-secondary shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <BarChart2 className="w-12 h-12 mx-auto mb-4 text-border" />
             <p>You have not taken any mock exams yet.</p>
          </div>
@@ -62,7 +72,7 @@ export default function StudentMockAnalytics() {
                const attempts = analytics[subject];
                
                return (
-                  <div key={subject} className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                  <div key={subject} className="bg-card border border-border rounded-lg shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
                      <div className="bg-background-alt px-6 py-4 border-b border-border">
                         <h3 className="text-lg font-bold text-text-primary">{subject}</h3>
                         <p className="text-xs text-text-secondary">{attempts.length} {attempts.length === 1 ? 'Attempt' : 'Attempts'}</p>

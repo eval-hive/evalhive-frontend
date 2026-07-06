@@ -148,14 +148,14 @@ export default function AdminSchoolResults() {
     >
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-text-primary mb-4">Filter Results</h2>
-        <div className="bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col md:flex-row items-end gap-4">
+        <div className="bg-card p-6 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex flex-col md:flex-row items-end gap-4">
           
           <div className="w-full md:w-1/4">
             <label className="block text-sm font-medium text-text-secondary mb-1">Session</label>
             <select 
               value={filters.sessionId} 
               onChange={(e) => handleFilterChange('sessionId', e.target.value)}
-              className="w-full border-border rounded-md shadow-sm p-2 text-sm focus:border-brand-indigo focus:ring-brand-indigo"
+              className="w-full border-border rounded-md shadow-[0_1px_2px_rgba(17,24,39,0.04)] p-2 text-sm focus:border-brand-indigo focus:ring-brand-indigo"
             >
               <option value="">All Sessions</option>
               {sessions.map((s: any) => (
@@ -170,7 +170,7 @@ export default function AdminSchoolResults() {
               value={filters.termId} 
               onChange={(e) => handleFilterChange('termId', e.target.value)}
               disabled={!filters.sessionId}
-              className="w-full border-border rounded-md shadow-sm p-2 text-sm focus:border-brand-indigo focus:ring-brand-indigo disabled:opacity-50"
+              className="w-full border-border rounded-md shadow-[0_1px_2px_rgba(17,24,39,0.04)] p-2 text-sm focus:border-brand-indigo focus:ring-brand-indigo disabled:opacity-50"
             >
               <option value="">All Terms</option>
               {terms.map((t: any) => (
@@ -184,7 +184,7 @@ export default function AdminSchoolResults() {
             <select 
               value={filters.classLevelId} 
               onChange={(e) => handleFilterChange('classLevelId', e.target.value)}
-              className="w-full border-border rounded-md shadow-sm p-2 text-sm focus:border-brand-indigo focus:ring-brand-indigo"
+              className="w-full border-border rounded-md shadow-[0_1px_2px_rgba(17,24,39,0.04)] p-2 text-sm focus:border-brand-indigo focus:ring-brand-indigo"
             >
               <option value="">All Classes</option>
               {classLevels.map((c: any) => (
@@ -196,7 +196,7 @@ export default function AdminSchoolResults() {
           <div className="flex gap-2 w-full md:w-auto">
             <button
               onClick={handleApplyFilters}
-              className="px-4 py-2 bg-brand-indigo text-white rounded-md text-sm font-medium shadow-sm hover:bg-brand-indigo/90 focus:outline-none w-full md:w-auto flex items-center justify-center"
+              className="px-4 py-2 bg-brand-indigo text-white rounded-md text-sm font-medium shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:bg-brand-indigo/90 focus:outline-none w-full md:w-auto flex items-center justify-center"
             >
               <Search className="w-4 h-4 mr-2" />
               Apply

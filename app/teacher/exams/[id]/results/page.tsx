@@ -141,7 +141,7 @@ export default function TeacherExamResults({ params }: { params: Promise<{ id: s
         
         {exam && (
           <div className="flex items-center gap-4">
-             <div className="bg-card px-4 py-2 rounded-lg border border-border shadow-sm flex items-center">
+             <div className="bg-card px-4 py-2 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex items-center">
                 <span className="text-sm text-text-secondary mr-3">Visibility status:</span>
                 <span className={`text-sm font-semibold px-2 py-1 rounded ${visibility === 'hidden' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                    {visibility === 'hidden' ? 'Hidden from Students' : (visibility === 'score_only' ? 'Score Only' : 'Full Breakdown')}
@@ -156,19 +156,19 @@ export default function TeacherExamResults({ params }: { params: Promise<{ id: s
 
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 mt-2">
-          <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+          <div className="bg-card p-6 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <p className="text-sm font-medium text-text-secondary">Total Attempts</p>
             <p className="mt-2 text-3xl font-bold text-text-primary">{stats.totalStudents}</p>
           </div>
-          <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+          <div className="bg-card p-6 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <p className="text-sm font-medium text-text-secondary">Average Score</p>
             <p className="mt-2 text-3xl font-bold text-brand-indigo">{stats.averageScore.toFixed(1)}</p>
           </div>
-          <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+          <div className="bg-card p-6 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <p className="text-sm font-medium text-text-secondary">Highest Score</p>
             <p className="mt-2 text-3xl font-bold text-green-600">{stats.highestScore}</p>
           </div>
-          <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+          <div className="bg-card p-6 rounded-lg border border-border shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <p className="text-sm font-medium text-text-secondary">Lowest Score</p>
             <p className="mt-2 text-3xl font-bold text-red-500">{stats.lowestScore}</p>
           </div>
@@ -176,7 +176,7 @@ export default function TeacherExamResults({ params }: { params: Promise<{ id: s
       )}
 
       {exam && (
-        <div className="mb-8 bg-brand-indigo/5 border border-brand-indigo/20 rounded-xl p-6">
+        <div className="mb-8 bg-brand-indigo/5 border border-brand-indigo/20 rounded-lg p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
              <div>
                 <h3 className="text-lg font-semibold text-text-primary mb-1">Publish Results to Students</h3>

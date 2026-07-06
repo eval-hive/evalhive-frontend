@@ -95,8 +95,7 @@ export default function ExamTakingInterface() {
           });
           setAnswers(initialAnswers);
         }
-      } catch (error) {
-        console.error('Failed to init exam', error);
+      } catch {
         router.push('/student/dashboard');
       } finally {
         setLoading(false);
@@ -127,8 +126,7 @@ export default function ExamTakingInterface() {
       });
       setSavingStatus('saved');
       setTimeout(() => setSavingStatus('idle'), 2000);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setSavingStatus('error');
     }
   };
@@ -206,7 +204,7 @@ export default function ExamTakingInterface() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
-      <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 shrink-0 z-10 sticky top-0 shadow-sm">
+      <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 shrink-0 z-10 sticky top-0 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="flex items-center space-x-4">
           <h1 className="text-lg font-semibold text-text-primary hidden sm:block">Exam Session</h1>
           <span className="text-sm px-3 py-1 bg-background-alt text-text-secondary rounded-full">
@@ -228,7 +226,7 @@ export default function ExamTakingInterface() {
           </div>
           <button 
             onClick={() => setShowConfirmModal(true)}
-            className="px-6 py-2 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 cursor-pointer transition-colors shadow-sm"
+            className="px-6 py-2 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 cursor-pointer transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
           >
             Submit
           </button>
@@ -316,7 +314,7 @@ export default function ExamTakingInterface() {
                 </div>
 
                 {currentQ.imageUrl && (
-                  <div className="mb-8 rounded-xl overflow-hidden border border-border max-w-lg">
+                  <div className="mb-8 rounded-lg overflow-hidden border border-border max-w-lg">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={currentQ.imageUrl} alt="Question figure" className="w-full h-auto object-cover" />
                   </div>
@@ -333,9 +331,9 @@ export default function ExamTakingInterface() {
                       <button
                         key={optKey}
                         onClick={() => handleSelectOption(optKey)}
-                        className={`w-full text-left p-5 rounded-xl border-2 transition-all flex items-center group ${
+                        className={`w-full text-left p-5 rounded-lg border-2 transition-all flex items-center group ${
                           isSelected 
-                            ? 'border-brand-indigo bg-brand-indigo/5 shadow-sm' 
+                            ? 'border-brand-indigo bg-brand-indigo/5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]' 
                             : 'border-border bg-background hover:border-brand-indigo/40 hover:bg-background-alt'
                         }`}
                       >
@@ -371,14 +369,14 @@ export default function ExamTakingInterface() {
             {currentIdx === questions.length - 1 ? (
               <button 
                 onClick={() => setShowConfirmModal(true)}
-                className="px-6 py-2.5 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 transition-colors shadow-sm"
+                className="px-6 py-2.5 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
               >
                 Submit Exam
               </button>
             ) : (
                <button 
                 onClick={() => setCurrentIdx(Math.min(questions.length - 1, currentIdx + 1))}
-                className="px-5 py-2.5 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 transition-colors flex items-center shadow-sm"
+                className="px-5 py-2.5 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 transition-colors flex items-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
               >
                 Next Option
                 <ChevronRight className="w-5 h-5 ml-1" />
@@ -391,7 +389,7 @@ export default function ExamTakingInterface() {
       {/* Submit Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-           <div className="bg-card rounded-2xl w-full max-w-md p-8 shadow-xl animate-in zoom-in-95 duration-200">
+           <div className="bg-card rounded-lg w-full max-w-md p-8 shadow-xl animate-in zoom-in-95 duration-200">
              <div className="w-12 h-12 bg-brand-indigo/10 rounded-full flex items-center justify-center mb-6">
                 <CheckCircle className="w-6 h-6 text-brand-indigo" />
              </div>
@@ -402,10 +400,10 @@ export default function ExamTakingInterface() {
                Are you sure you want to completely submit your exam?
              </p>
              <div className="flex gap-4 w-full">
-               <button className="flex-1 py-3 bg-background-alt hover:bg-border text-text-primary rounded-xl font-medium transition-colors" onClick={() => setShowConfirmModal(false)}>
+               <button className="flex-1 py-3 bg-background-alt hover:bg-border text-text-primary rounded-lg font-medium transition-colors" onClick={() => setShowConfirmModal(false)}>
                  Go Back
                </button>
-               <button className="flex-1 py-3 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-xl font-medium transition-colors shadow-sm" onClick={handleManualSubmit}>
+               <button className="flex-1 py-3 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-lg font-medium transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]" onClick={handleManualSubmit}>
                  Submit Now
                </button>
              </div>
