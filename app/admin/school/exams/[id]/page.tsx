@@ -28,8 +28,22 @@ export default function ExamDetailPage() {
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>(null);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [classLevels, setClassLevels] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [terms, setTerms] = useState<any[]>([]);
 
   useEffect(() => { loadExam(); }, [id]);
+  useEffect(() => { loadFormOptions(); }, []);
+  useEffect(() => {
+    if (formData?.sessionId) {
+      api.get(`/sessions/${formData.sessionId}/terms`)
+        .then(r => setTerms(r.data.terms || []))
+        .catch(() => setTerms([]));
+    } else {
+      setTerms([]);
+    }
+  }, [formData?.sessionId]);
 
   const loadExam = async () => {
     try {
@@ -52,10 +66,39 @@ export default function ExamDetailPage() {
       });
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
+
+  const loadFormOptions = async () => {
+    try {
+      const [subRes, clRes, sesRes] = await Promise.all([
+        api.get('/subjects'),
+        api.get('/sessions/class-levels'),
+        api.get('/sessions'),
+      ]);
+      setSubjects(subRes.data.subjects || []);
+      setClassLevels(clRes.data.classLevels || []);
+      setSessions(sesRes.data.sessions || []);
+    } catch {
+      setError('Could not load exam setting options.');
+    }
+  };
+
+  const updateForm = (field: string, value: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [field]: value,
+      ...(field === 'sessionId' ? { termId: '' } : {}),
+    }));
+  };
   
   const handleUpdate = async () => {
     setError(''); setActionLoading(true);
     try {
+      if (!isMock && (!formData.subjectId || !formData.classLevelId || !formData.sessionId || !formData.termId)) {
+        setError('Subject, class level, session, and term are required for internal exams.');
+        setActionLoading(false);
+        return;
+      }
+
       await api.put(`/exams/${id}`, {
         ...formData,
         durationMinutes: parseInt(formData.durationMinutes),
@@ -133,7 +176,7 @@ export default function ExamDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-semibold text-text-primary">{exam.title}</h2>
-              <button onClick={() => setIsEditing(!isEditing)} className="text-xs text-brand-indigo hover:underline">
+              <button onClick={() => setIsEditing(!isEditing)} className="text-xs text-white bg-accent p-1 cursor-pointer hover:bg-accent/90 rounded transition-colors">
                 {isEditing ? 'Cancel Edit' : 'Edit Settings'}
               </button>
             </div>
@@ -155,12 +198,20 @@ export default function ExamDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-text-secondary mb-1">Exam Title</label>
-                <input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})}
+                <input type="text" value={formData.title} onChange={(e) => updateForm('title', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
               </div>
               <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1">{isMock ? 'Question Bank Subject' : 'Subject'}</label>
+                <select value={formData.subjectId || ''} onChange={(e) => updateForm('subjectId', e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
+                  <option value="">Select Subject</option>
+                  {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-text-secondary mb-1">Options per Question</label>
-                <select value={formData.optionsCount} onChange={(e) => setFormData({...formData, optionsCount: parseInt(e.target.value)})}
+                <select value={formData.optionsCount} onChange={(e) => updateForm('optionsCount', parseInt(e.target.value))}
                   className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
                   <option value={4}>4 Options (A-D)</option>
                   <option value={5}>5 Options (A-E)</option>
@@ -168,29 +219,53 @@ export default function ExamDetailPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-text-secondary mb-1">Duration (minutes)</label>
-                <input type="number" min="1" value={formData.durationMinutes} onChange={(e) => setFormData({...formData, durationMinutes: e.target.value})}
+                <input type="number" min="1" value={formData.durationMinutes} onChange={(e) => updateForm('durationMinutes', e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
               </div>
               {!isMock && (
                 <>
                   <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">Class Level</label>
+                    <select value={formData.classLevelId || ''} onChange={(e) => updateForm('classLevelId', e.target.value)}
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
+                      <option value="">Select Class</option>
+                      {classLevels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">Session</label>
+                    <select value={formData.sessionId || ''} onChange={(e) => updateForm('sessionId', e.target.value)}
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
+                      <option value="">Select Session</option>
+                      {sessions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">Term</label>
+                    <select value={formData.termId || ''} onChange={(e) => updateForm('termId', e.target.value)}
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
+                      <option value="">Select Term</option>
+                      {terms.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-xs font-medium text-text-secondary mb-1">Date</label>
-                    <input type="date" value={formData.scheduledDate} onChange={(e) => setFormData({...formData, scheduledDate: e.target.value})}
+                    <input type="date" value={formData.scheduledDate} onChange={(e) => updateForm('scheduledDate', e.target.value)}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-text-secondary mb-1">Start Time</label>
-                    <input type="time" value={formData.startTime} onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                    <input type="time" value={formData.startTime} onChange={(e) => updateForm('startTime', e.target.value)}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-text-secondary mb-1">End Time</label>
-                    <input type="time" value={formData.endTime} onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                    <input type="time" value={formData.endTime} onChange={(e) => updateForm('endTime', e.target.value)}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-text-secondary mb-1">Result Visibility</label>
-                    <select value={formData.resultVisibility} onChange={(e) => setFormData({...formData, resultVisibility: e.target.value})}
+                    <select value={formData.resultVisibility} onChange={(e) => updateForm('resultVisibility', e.target.value)}
                       className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
                       <option value="hidden">Hidden</option>
                       <option value="score_only">Score Only</option>
@@ -198,6 +273,11 @@ export default function ExamDetailPage() {
                     </select>
                   </div>
                 </>
+              )}
+              {isMock && (
+                <div className="sm:col-span-2 rounded-lg border border-brand-indigo/20 bg-brand-indigo/5 p-4 text-sm text-text-secondary">
+                  Mock question banks do not use exam dates or start/end times. Students can take JAMB and WAEC mocks anytime while mock availability is enabled on the School Dashboard.
+                </div>
               )}
             </div>
             <button onClick={handleUpdate} disabled={actionLoading}
