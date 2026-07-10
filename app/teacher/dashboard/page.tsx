@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
+import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 
 const navItems = [
@@ -81,9 +82,9 @@ export default function TeacherDashboard() {
       <h2 className="text-lg font-semibold text-text-primary mb-4">Quick Actions</h2>
       <div className="bg-card rounded-lg border border-border p-8 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <p className="text-text-secondary mb-6">You haven't created any exams yet.</p>
-        <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-[0_1px_2px_rgba(17,24,39,0.04)] text-white bg-brand-indigo hover:bg-brand-indigo/90 focus:outline-none">
+        <Link href="/teacher/exams/create" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-[0_1px_2px_rgba(17,24,39,0.04)] text-white bg-brand-indigo hover:bg-brand-indigo/90 focus:outline-none">
           Create New Exam
-        </button>
+        </Link>
       </div>
     </DashboardLayout>
   );

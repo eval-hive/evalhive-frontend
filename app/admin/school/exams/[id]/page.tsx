@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { BookOpen, CheckCircle, XCircle, ArrowLeft, Edit, Users } from 'lucide-react';
+import { BookOpen, CheckCircle, XCircle, ArrowLeft, Edit, Users, Trash2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ExamStatusBadge from '@/components/ExamStatusBadge';
 import QuestionCard from '@/components/QuestionCard';
@@ -143,6 +143,20 @@ export default function ExamDetailPage() {
       setShowReassign(true);
     } catch (e) { console.error(e); }
   };
+
+  const deleteExam = async () => {
+    if (!window.confirm(`Delete "${exam.title}"? This cannot be undone.`)) return;
+
+    setActionLoading(true);
+    setError('');
+    try {
+      await api.delete(`/exams/${id}`);
+      router.push('/admin/school/exams');
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Failed to delete exam');
+    } finally { setActionLoading(false); }
+  };
+
   const isMock = exam?.examType !== 'internal';
 
   if (loading || !exam) {
@@ -189,6 +203,10 @@ export default function ExamDetailPage() {
             <button onClick={() => router.push(`/admin/school/exams/${id}/questions`)}
               className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-brand-indigo bg-brand-indigo/10 hover:bg-brand-indigo/20 transition-colors">
               <Edit className="h-3.5 w-3.5 mr-1" /> Manage Questions ({exam.questions?.length || 0})
+            </button>
+            <button onClick={deleteExam} disabled={actionLoading}
+              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-brand-red bg-brand-red/10 hover:bg-brand-red/20 transition-colors disabled:opacity-70">
+              <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
             </button>
           </div>
         </div>

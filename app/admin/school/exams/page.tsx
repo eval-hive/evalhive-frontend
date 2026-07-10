@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, BookOpen, Filter } from 'lucide-react';
+import { Plus, Eye, BookOpen, Filter, Trash2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ExamStatusBadge from '@/components/ExamStatusBadge';
 import api from '@/lib/api';
@@ -37,21 +37,43 @@ export default function ExamsListPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   useEffect(() => { loadExams(); }, [statusFilter]);
 
   const loadExams = async () => {
     try {
       setLoading(true);
+      setError('');
       const params: any = {};
       if (statusFilter) params.status = statusFilter;
       const res = await api.get('/exams', { params });
       setExams(res.data.exams);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Could not load exams');
+    } finally { setLoading(false); }
+  };
+
+  const deleteExam = async (exam: Exam) => {
+    if (!window.confirm(`Delete "${exam.title}"? This cannot be undone.`)) return;
+
+    setError('');
+    setMessage('');
+    try {
+      await api.delete(`/exams/${exam.id}`);
+      setMessage('Exam deleted.');
+      loadExams();
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Could not delete exam');
+    }
   };
 
   return (
     <DashboardLayout navItems={navItems} title="Exams" role="School Admin">
+      {message && <div className="mb-4 rounded-lg border border-brand-emerald/30 bg-brand-emerald/10 p-3 text-sm text-brand-emerald">{message}</div>}
+      {error && <div className="mb-4 rounded-lg border border-brand-red/30 bg-brand-red/10 p-3 text-sm text-brand-red">{error}</div>}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -107,10 +129,18 @@ export default function ExamsListPage() {
                       {exam.scheduledDate ? new Date(exam.scheduledDate).toLocaleDateString() : '—'}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => router.push(`/admin/school/exams/${exam.id}`)}
-                        className="p-1.5 rounded-md text-text-secondary hover:text-brand-indigo hover:bg-brand-indigo/10 transition-colors">
-                        <Eye className="h-4 w-4" />
-                      </button>
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => router.push(`/admin/school/exams/${exam.id}`)}
+                          className="p-1.5 rounded-md text-text-secondary hover:text-brand-indigo hover:bg-brand-indigo/10 transition-colors"
+                          title="View exam">
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => deleteExam(exam)}
+                          className="p-1.5 rounded-md text-text-secondary hover:text-brand-red hover:bg-brand-red/10 transition-colors"
+                          title="Delete exam">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
