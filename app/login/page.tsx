@@ -118,7 +118,7 @@ export default function LoginPage() {
             <div className="mt-24 max-w-md">
               <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-gold">Secure assessment platform</p>
               <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight">
-                Professional CBT management for modern secondary schools.
+                Professional CBT management system for modern secondary schools.
               </h1>
               <p className="mt-5 text-base leading-7 text-white/70">
                 Manage exams, mock practice, question banks, student attempts, and results from one polished school portal.

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, FileUp, GraduationCap, LockKeyhole, RotateCcw, Search, UserCheck, UserX } from 'lucide-react';
+import { ArrowUpRight, Eye, FileUp, GraduationCap, LockKeyhole, Search, UserCheck, UserX } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import api from '@/lib/api';
 
@@ -28,6 +28,9 @@ export default function StudentsPage() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
   const [filters, setFilters] = useState({ search: '', class_level_id: '', session_id: '', is_active: '' });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [targetSessionId, setTargetSessionId] = useState('');
+  const [promoting, setPromoting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -42,6 +45,7 @@ export default function StudentsPage() {
   }, []);
 
   useEffect(() => { loadStudents(1); }, [filters.class_level_id, filters.session_id, filters.is_active]);
+  useEffect(() => { setSelectedIds([]); }, [filters.class_level_id, filters.session_id, filters.is_active, filters.search]);
 
   const loadStudents = async (page = pagination.page) => {
     setLoading(true);
@@ -54,6 +58,7 @@ export default function StudentsPage() {
       const res = await api.get('/students', { params });
       setStudents(res.data.students || []);
       setPagination(res.data.pagination || { page, totalPages: 1, total: 0 });
+      setSelectedIds([]);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Could not load students.');
     } finally {
@@ -82,6 +87,52 @@ export default function StudentsPage() {
 
   const setFilter = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const selectedClass = classLevels.find(level => level.id === filters.class_level_id);
+  const promotionMap: Record<string, string> = { JS1: 'JS2', JS2: 'JS3', JS3: 'SS1', SS1: 'SS2', SS2: 'SS3' };
+  const destinationClassName = selectedClass ? promotionMap[selectedClass.name] : '';
+  const isGraduation = selectedClass?.name === 'SS3';
+  const canPromote = Boolean(filters.class_level_id && filters.session_id && selectedIds.length > 0 && (isGraduation || targetSessionId));
+  const allVisibleSelected = students.length > 0 && students.every(student => selectedIds.includes(student.id));
+
+  const toggleStudent = (studentId: string) => {
+    setSelectedIds(prev => prev.includes(studentId) ? prev.filter(id => id !== studentId) : [...prev, studentId]);
+  };
+
+  const toggleAllVisible = () => {
+    if (allVisibleSelected) {
+      setSelectedIds(prev => prev.filter(id => !students.some(student => student.id === id)));
+    } else {
+      setSelectedIds(prev => Array.from(new Set([...prev, ...students.map(student => student.id)])));
+    }
+  };
+
+  const promoteSelected = async () => {
+    const actionLabel = isGraduation
+      ? `graduate ${selectedIds.length} student(s) and disable their access`
+      : `promote ${selectedIds.length} student(s) to ${destinationClassName}`;
+    if (!window.confirm(`Confirm ${actionLabel}? Previous enrollment history will be preserved.`)) return;
+
+    setPromoting(true);
+    setError('');
+    setMessage('');
+    try {
+      const res = await api.post('/students/promote', {
+        student_ids: selectedIds,
+        source_class_level_id: filters.class_level_id,
+        source_session_id: filters.session_id,
+        target_session_id: isGraduation ? undefined : targetSessionId,
+      });
+      const summary = res.data.summary;
+      setMessage(`Promotion complete. Promoted: ${summary.promoted}, Graduated: ${summary.graduated}, Skipped: ${summary.skipped}.`);
+      setSelectedIds([]);
+      loadStudents();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Promotion failed.');
+    } finally {
+      setPromoting(false);
+    }
   };
 
   return (
@@ -123,6 +174,39 @@ export default function StudentsPage() {
         </div>
       </div>
 
+      {filters.class_level_id && filters.session_id && (
+        <div className="mb-6 rounded-lg border border-border bg-card p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-text-primary">Class Promotion</h2>
+              <p className="mt-1 text-sm text-text-secondary">
+                {isGraduation
+                  ? 'SS3 students will be graduated and their login access disabled.'
+                  : destinationClassName
+                    ? `Selected ${selectedClass?.name} students will move to ${destinationClassName}.`
+                    : 'Choose a valid source class to preview the destination.'}
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {!isGraduation && (
+                <select value={targetSessionId} onChange={e => setTargetSessionId(e.target.value)} className="rounded-lg border border-border bg-white px-3 py-2 text-sm">
+                  <option value="">Target Session</option>
+                  {sessions.map(session => <option key={session.id} value={session.id}>{session.name}</option>)}
+                </select>
+              )}
+              <button
+                onClick={promoteSelected}
+                disabled={!canPromote || promoting}
+                className="inline-flex items-center justify-center rounded-lg bg-brand-indigo px-4 py-2 text-sm font-medium text-white hover:bg-brand-indigo/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ArrowUpRight className="mr-2 h-4 w-4" />
+                {isGraduation ? 'Graduate Selected' : 'Promote Selected'} ({selectedIds.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         {loading ? (
           <div className="p-12 text-center text-sm text-text-secondary">Loading students...</div>
@@ -133,6 +217,15 @@ export default function StudentsPage() {
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleAllVisible}
+                      className="h-4 w-4 rounded border-border text-brand-indigo"
+                      aria-label="Select all visible students"
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Admission No</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Full Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-text-secondary">Class Level</th>
@@ -144,6 +237,15 @@ export default function StudentsPage() {
               <tbody className="divide-y divide-border bg-white">
                 {students.map(student => (
                   <tr key={student.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(student.id)}
+                        onChange={() => toggleStudent(student.id)}
+                        className="h-4 w-4 rounded border-border text-brand-indigo"
+                        aria-label={`Select ${student.fullName}`}
+                      />
+                    </td>
                     <td className="px-6 py-4 text-sm font-medium text-text-primary">{student.admissionNumber}</td>
                     <td className="px-6 py-4 text-sm text-text-primary">{student.fullName}</td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{student.classLevel?.name || '-'}</td>
