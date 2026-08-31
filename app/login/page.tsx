@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Lock, Mail, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 import api from '@/lib/api';
 import { loginAuth } from '@/lib/auth';
@@ -27,7 +28,10 @@ export default function LoginPage() {
         .then(res => {
           setSchoolData(res.data.school);
           if (res.data.school && !res.data.school.isActive) {
-            setSchoolError("This school's account is currently suspended. Contact Eval Hive support.");
+            const inactiveMessage = res.data.school.subscriptionStatus === 'pending_approval'
+              ? "This school's registration is still awaiting Eval Hive approval."
+              : "This school's account is currently suspended. Contact Eval Hive support.";
+            setSchoolError(inactiveMessage);
           }
         })
         .catch(() => {
@@ -138,7 +142,9 @@ export default function LoginPage() {
           <div className="w-full max-w-md">
             <div>
               {schoolData?.logoUrl ? (
-                <img src={schoolData.logoUrl} alt={schoolData.name} className="h-16 w-auto mb-6" />
+                <div className="mb-6 flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-border bg-white p-2 shadow-sm">
+                  <img src={schoolData.logoUrl} alt={schoolData.name} className="h-full w-full object-contain" />
+                </div>
               ) : (
                 <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-brand-indigo/10 text-brand-indigo">
                   <ShieldCheck className="h-6 w-6" />
@@ -221,6 +227,15 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
+
+            {!slug && (
+              <p className="mt-6 text-center text-sm text-text-secondary">
+                Registering a school?{' '}
+                <Link href="/register" className="font-semibold text-brand-indigo hover:text-brand-indigo/80">
+                  Create a school account
+                </Link>
+              </p>
+            )}
           </div>
         </div>
       </div>

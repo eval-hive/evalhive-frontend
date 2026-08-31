@@ -16,13 +16,15 @@ import {
   LogOut,
   Menu,
   Monitor,
+  Moon,
   PlayCircle,
   Search,
+  Settings,
   UploadCloud,
   User,
   Users,
 } from 'lucide-react';
-import { logout } from '@/lib/auth';
+import { getUser, logout } from '@/lib/auth';
 
 interface NavItem {
   name: string;
@@ -122,6 +124,9 @@ const isPathActive = (pathname: string, item: NavItem) => {
 export default function DashboardLayout({ children, navItems, title, role }: DashboardLayoutProps) {
   const pathname = usePathname();
   const menuItems = getRoleNavItems(role, navItems);
+  const user = getUser();
+  const displayName = user?.displayName || role;
+  const initial = displayName.charAt(0).toUpperCase();
 
   const renderNavLink = (item: NavItem, nested = false) => {
     const isActive = isPathActive(pathname, item);
@@ -130,15 +135,15 @@ export default function DashboardLayout({ children, navItems, title, role }: Das
         key={item.name}
         href={item.href}
         className={`
-          group flex items-center rounded-lg text-sm font-semibold transition-all
+          group flex items-center rounded-lg text-sm font-semibold transition-colors
           ${nested ? 'px-3 py-2 text-[13px]' : 'px-3 py-2.5'}
           ${isActive
-            ? 'bg-white text-brand-indigo shadow-[0_1px_2px_rgba(17,24,39,0.04)]'
-            : 'text-white/75 hover:bg-white/10 hover:text-white'
+            ? 'bg-brand-indigo/10 text-brand-indigo'
+            : 'text-text-secondary hover:bg-background-alt hover:text-text-primary'
           }
         `}
       >
-        <item.icon className={`mr-3 flex-shrink-0 ${nested ? 'h-4 w-4' : 'h-5 w-5'} ${isActive ? 'text-brand-indigo' : 'text-white/70 group-hover:text-white'}`} />
+        <item.icon className={`mr-3 flex-shrink-0 ${nested ? 'h-4 w-4' : 'h-5 w-5'} ${isActive ? 'text-brand-indigo' : 'text-text-secondary group-hover:text-text-primary'}`} />
         {item.name}
       </Link>
     );
@@ -154,14 +159,14 @@ export default function DashboardLayout({ children, navItems, title, role }: Das
           className={`
             flex cursor-pointer list-none items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-all
             [&::-webkit-details-marker]:hidden
-            ${isActive ? 'bg-white/10 text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}
+            ${isActive ? 'bg-brand-indigo/10 text-brand-indigo' : 'text-text-secondary hover:bg-background-alt hover:text-text-primary'}
           `}
         >
-          <item.icon className="mr-3 h-5 w-5 flex-shrink-0 text-white/70 group-hover/nav:text-white" />
+          <item.icon className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive ? 'text-brand-indigo' : 'text-text-secondary group-hover/nav:text-text-primary'}`} />
           <span className="flex-1">{item.name}</span>
-          <ChevronDown className="h-4 w-4 text-white/55 transition-transform group-open/nav:rotate-180" />
+          <ChevronDown className="h-4 w-4 text-text-secondary transition-transform group-open/nav:rotate-180" />
         </summary>
-        <div className="ml-5 mt-1 space-y-1 border-l border-white/10 pl-3">
+        <div className="ml-5 mt-1 space-y-1 border-l border-border pl-3">
           {item.children.map(child => renderNavLink(child, true))}
         </div>
       </details>
@@ -171,43 +176,52 @@ export default function DashboardLayout({ children, navItems, title, role }: Das
   return (
     <div className="h-screen overflow-hidden flex bg-background text-text-primary">
       {/* Sidebar */}
-      <div className="hidden md:flex w-72 flex-col fixed inset-y-0 bg-brand-indigo z-10 transition-all shadow-2xl shadow-brand-indigo/20">
-        <div className="flex h-20 shrink-0 items-center px-6 border-b border-white/10">
+      <aside className="hidden md:flex w-72 flex-col fixed inset-y-0 border-r border-border bg-white z-10 transition-all">
+        <div className="flex h-20 shrink-0 items-center px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-gold text-sm font-black text-brand-indigo shadow-lg shadow-black/10">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-gold text-sm font-black text-brand-indigo shadow-sm">
               EH
             </div>
             <div>
-              <span className="block text-xl font-bold tracking-tight text-white">Eval Hive</span>
-              <span className="block text-xs font-medium text-white/55">School CBT Suite</span>
+              <span className="block text-xl font-bold tracking-tight text-text-primary">Eval Hive</span>
+              <span className="block text-xs font-medium text-text-secondary">School CBT Suite</span>
             </div>
           </div>
         </div>
         
         <div className="flex flex-1 flex-col overflow-y-auto">
-          <nav className="flex-1 space-y-1 px-4 py-5">
-            <div className="text-[11px] font-bold text-white/45 uppercase tracking-[0.16em] mb-3 px-3">
+          <nav className="flex-1 space-y-1 px-4 py-6">
+            <div className="text-[11px] font-bold text-text-secondary/70 uppercase tracking-[0.16em] mb-3 px-3">
               {role}
             </div>
             {menuItems.map(renderNavItem)}
           </nav>
         </div>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="space-y-3 border-t border-border p-4">
+          <div className="flex items-center gap-3 rounded-lg bg-background px-3 py-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-white text-sm font-bold text-brand-indigo shadow-sm">
+              {initial}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-text-primary">{displayName}</p>
+              <p className="truncate text-xs font-semibold uppercase tracking-wide text-text-secondary">{role}</p>
+            </div>
+          </div>
           <button
             onClick={() => logout()}
-            className="group flex w-full items-center px-3 py-2.5 text-sm font-semibold rounded-lg text-white/75 hover:bg-white/10 hover:text-white transition-colors"
+            className="group flex w-full items-center rounded-lg bg-brand-indigo/10 px-3 py-2.5 text-sm font-semibold text-brand-indigo transition-colors hover:bg-brand-indigo/15"
           >
-            <LogOut className="mr-3 h-5 w-5 text-white/70 group-hover:text-white" />
+            <LogOut className="mr-3 h-5 w-5" />
             Logout
           </button>
         </div>
-      </div>
+      </aside>
 
       {/* Main Content wrapper */}
       <div className="flex min-w-0 flex-1 flex-col md:pl-72">
         {/* Top Navbar */}
-        <header className="z-10 flex h-20 flex-shrink-0 items-center gap-x-4 border-b border-border bg-white/90 px-4 backdrop-blur sm:gap-x-6 sm:px-6 lg:px-8">
+        <header className="z-10 flex h-20 flex-shrink-0 items-center gap-x-4 border-b border-border bg-white/95 px-4 backdrop-blur sm:gap-x-6 sm:px-6 lg:px-8">
           <button type="button" className="-m-2.5 p-2.5 text-text-secondary md:hidden">
             <span className="sr-only">Open sidebar</span>
             <Menu className="h-6 w-6" aria-hidden="true" />
@@ -218,26 +232,41 @@ export default function DashboardLayout({ children, navItems, title, role }: Das
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 justify-between items-center">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-text-secondary hidden sm:block">{role}</p>
-              <h1 className="text-2xl font-bold tracking-tight text-text-primary hidden sm:block">{title}</h1>
+              <p className="hidden text-sm font-semibold text-text-secondary sm:block">
+                Dashboard <span className="mx-1 text-border">/</span> <span className="text-text-primary">{title}</span>
+              </p>
             </div>
-            <div className="flex items-center gap-x-4 lg:gap-x-6 ml-auto">
-              <div className="hidden xl:flex h-10 w-80 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm text-text-secondary">
-                <Search className="h-4 w-4" />
-                <span>Search students, exams, results</span>
-              </div>
+            <div className="flex items-center gap-x-2 sm:gap-x-3 lg:gap-x-4 ml-auto">
+              <button type="button" className="hidden rounded-lg p-2.5 text-text-secondary transition-colors hover:bg-background-alt hover:text-text-primary sm:inline-flex">
+                <span className="sr-only">Toggle theme</span>
+                <Moon className="h-5 w-5" aria-hidden="true" />
+              </button>
 
-              <button type="button" className="rounded-lg border border-border bg-white p-2.5 text-text-secondary hover:border-brand-indigo/30 hover:text-brand-indigo transition-colors">
+              <button type="button" className="hidden rounded-lg p-2.5 text-text-secondary transition-colors hover:bg-background-alt hover:text-text-primary sm:inline-flex">
+                <span className="sr-only">Search</span>
+                <Search className="h-5 w-5" aria-hidden="true" />
+              </button>
+
+              <button type="button" className="rounded-lg p-2.5 text-text-secondary transition-colors hover:bg-background-alt hover:text-text-primary">
                 <span className="sr-only">View notifications</span>
                 <Bell className="h-5 w-5" aria-hidden="true" />
               </button>
 
-              <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" />
+              <button type="button" className="hidden rounded-lg p-2.5 text-text-secondary transition-colors hover:bg-background-alt hover:text-text-primary sm:inline-flex">
+                <span className="sr-only">Settings</span>
+                <Settings className="h-5 w-5" aria-hidden="true" />
+              </button>
 
-              <div className="flex items-center gap-x-4">
+              <div className="hidden lg:block lg:h-8 lg:w-px lg:bg-border" />
+
+              <div className="flex items-center gap-x-3 pl-1">
                 <span className="sr-only">Your profile</span>
-                <div className="h-10 w-10 rounded-lg bg-brand-indigo/10 flex items-center justify-center text-brand-indigo font-bold ring-1 ring-brand-indigo/10">
-                  <User className="h-5 w-5" />
+                <div className="hidden text-right lg:block">
+                  <p className="max-w-56 truncate text-sm font-bold text-text-primary">{displayName}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-brand-indigo">Live</p>
+                </div>
+                <div className="h-11 w-11 rounded-full border border-border bg-white flex items-center justify-center text-brand-indigo font-bold shadow-sm">
+                  {initial || <User className="h-5 w-5" />}
                 </div>
               </div>
             </div>

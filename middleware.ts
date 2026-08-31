@@ -56,7 +56,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Paths that don't require authentication
-  const isPublicPath = pathname === '/login';
+  const isPublicPath = pathname === '/login' || pathname === '/register';
 
   // If trying to access a protected route without being logged in
   if (!isPublicPath && (!token || !userCookie)) {

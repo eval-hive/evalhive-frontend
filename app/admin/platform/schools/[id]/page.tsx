@@ -77,6 +77,7 @@ export default function SchoolPreviewPage({ params }: { params: Promise<{ id: st
   }
 
   const { school, recentExams, adminUsers } = data;
+  const isPendingApproval = school.subscriptionStatus === 'pending_approval';
 
   const examColumns: Column<any>[] = [
     { header: 'Title', accessorKey: 'title', sortable: true },
@@ -114,7 +115,7 @@ export default function SchoolPreviewPage({ params }: { params: Promise<{ id: st
             className={`inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-md transition-colors ${school.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-brand-emerald hover:bg-brand-emerald/90'}`}
           >
             {actionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : (school.isActive ? <ShieldOff className="w-4 h-4 mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />)}
-            {school.isActive ? 'Suspend School' : 'Activate School'}
+            {school.isActive ? 'Suspend School' : isPendingApproval ? 'Approve School' : 'Activate School'}
           </button>
         </div>
       </div>
@@ -126,12 +127,22 @@ export default function SchoolPreviewPage({ params }: { params: Promise<{ id: st
           <div className="space-y-2 text-sm">
             <p><span className="font-medium text-text-secondary w-32 inline-block">Slug:</span> <span className="font-mono text-text-primary">{school.slug}</span></p>
             <p><span className="font-medium text-text-secondary w-32 inline-block">Contact:</span> {school.contactEmail || '-'}</p>
+            <p><span className="font-medium text-text-secondary w-32 inline-block">Phone:</span> {school.contactPhone || '-'}</p>
             <p><span className="font-medium text-text-secondary w-32 inline-block">Address:</span> {school.address || '-'}</p>
             <p><span className="font-medium text-text-secondary w-32 inline-block">Status:</span>
-              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium ${school.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {school.isActive ? 'Active' : 'Suspended'}
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                isPendingApproval
+                  ? 'bg-brand-gold/10 text-brand-gold'
+                  : school.isActive
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+              }`}>
+                {isPendingApproval ? 'Pending Approval' : school.isActive ? 'Active' : 'Suspended'}
               </span>
             </p>
+            {school.trialEndsAt && (
+              <p><span className="font-medium text-text-secondary w-32 inline-block">Trial Ends:</span> {new Date(school.trialEndsAt).toLocaleDateString()}</p>
+            )}
             <p><span className="font-medium text-text-secondary w-32 inline-block">Created:</span> {new Date(school.createdAt).toLocaleDateString()}</p>
           </div>
         </div>

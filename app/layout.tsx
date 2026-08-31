@@ -11,6 +11,9 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Eval Hive CBT",
   description: "Computer-Based Testing Platform for Nigerian Secondary Schools",
+  icons: {
+    icon: "/images/Favicon.jpg",
+  },
 };
 
 export default function RootLayout({

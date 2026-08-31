@@ -15,8 +15,9 @@ const navItems = [
 ];
 
 interface School {
-  id: string; name: string; slug: string; contactEmail: string;
+  id: string; name: string; slug: string; contactEmail: string; contactPhone?: string | null;
   isActive: boolean; subscriptionStatus: string; createdAt: string;
+  trialEndsAt?: string | null; approvedAt?: string | null;
   activeStudents: number; teacherCount: number; examsTaken: number;
 }
 
@@ -35,7 +36,7 @@ export default function SuperAdminDashboard() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    name: '', slug: '', address: '', contactEmail: '', adminEmail: '', adminPassword: ''
+    name: '', slug: '', address: '', contactEmail: '', contactPhone: '', adminEmail: '', adminPassword: ''
   });
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -92,7 +93,7 @@ export default function SuperAdminDashboard() {
     try {
       await api.post('/super-admin/schools', form);
       setShowModal(false);
-      setForm({ name: '', slug: '', address: '', contactEmail: '', adminEmail: '', adminPassword: '' });
+      setForm({ name: '', slug: '', address: '', contactEmail: '', contactPhone: '', adminEmail: '', adminPassword: '' });
       await fetchData();
     } catch (err: any) {
       setFormError(err.response?.data?.error || 'Failed to create school');
@@ -156,13 +157,20 @@ export default function SuperAdminDashboard() {
                       <td className="px-6 py-4">
                         <p className="font-medium text-text-primary">{school.name}</p>
                         {school.contactEmail && <p className="text-xs text-text-secondary">{school.contactEmail}</p>}
+                        {school.contactPhone && <p className="text-xs text-text-secondary">{school.contactPhone}</p>}
                       </td>
                       <td className="px-6 py-4 text-sm text-text-secondary font-mono">{school.slug}</td>
                       <td className="px-6 py-4 text-sm text-text-primary">{school.activeStudents}</td>
                       <td className="px-6 py-4 text-sm text-text-primary">{school.examsTaken}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${school.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {school.isActive ? 'Active' : 'Suspended'}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          school.subscriptionStatus === 'pending_approval'
+                            ? 'bg-brand-gold/10 text-brand-gold'
+                            : school.isActive
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-red-100 text-red-700'
+                        }`}>
+                          {school.subscriptionStatus === 'pending_approval' ? 'Pending Approval' : school.isActive ? 'Active' : 'Suspended'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -221,6 +229,7 @@ export default function SuperAdminDashboard() {
                 { label: 'URL Slug', key: 'slug', type: 'text', placeholder: 'greenfield' },
                 { label: 'Address', key: 'address', type: 'text', placeholder: '123 Main St, Lagos' },
                 { label: 'Contact Email', key: 'contactEmail', type: 'email', placeholder: 'info@school.edu.ng' },
+                { label: 'Phone Number', key: 'contactPhone', type: 'tel', placeholder: '+234 801 234 5678' },
                 { label: 'Admin Email', key: 'adminEmail', type: 'email', placeholder: 'admin@school.edu.ng' },
                 { label: 'Admin Password', key: 'adminPassword', type: 'password', placeholder: '••••••••' },
               ].map(field => (

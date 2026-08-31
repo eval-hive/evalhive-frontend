@@ -50,7 +50,7 @@ export function isSuperAdminContextClient(): boolean {
 export function getSchoolLoginUrl(slug: string): string {
   // If production
   if (process.env.NODE_ENV === "production") {
-    return `https://${slug}.evalhive.com/login`;
+    return `https://${slug}.evalhive.ng/login`;
   }
 
   // Local development

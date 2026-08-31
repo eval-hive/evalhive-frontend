@@ -18,7 +18,7 @@ export default function PlatformSchoolsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({ 
     name: '', slug: '', address: '', contactEmail: '',
-    adminEmail: '', adminPassword: '' 
+    contactPhone: '', adminEmail: '', adminPassword: '' 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,8 @@ export default function PlatformSchoolsPage() {
         name: formData.name,
         slug: formData.slug,
         address: formData.address,
-        contactEmail: formData.contactEmail
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone
       });
       
       const schoolId = schoolRes.data.school.id;
@@ -67,7 +68,7 @@ export default function PlatformSchoolsPage() {
         });
       }
 
-      setFormData({ name: '', slug: '', address: '', contactEmail: '', adminEmail: '', adminPassword: '' });
+      setFormData({ name: '', slug: '', address: '', contactEmail: '', contactPhone: '', adminEmail: '', adminPassword: '' });
       setShowAddForm(false);
       fetchSchools();
     } catch (err: any) {
@@ -132,7 +133,7 @@ export default function PlatformSchoolsPage() {
                 />
                 {formData.slug && (
                   <p className="mt-1 text-xs text-text-secondary">
-                    School URL will be: <span className="font-semibold">{formData.slug}.evalhive.com</span>
+                    School URL will be: <span className="font-semibold">{formData.slug}.evalhive.ng</span>
                   </p>
                 )}
               </div>
@@ -143,6 +144,16 @@ export default function PlatformSchoolsPage() {
                   value={formData.contactEmail}
                   onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
                   className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={formData.contactPhone}
+                  onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
+                  placeholder="+234 801 234 5678"
                 />
               </div>
               <div>
@@ -228,6 +239,7 @@ export default function PlatformSchoolsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-text-primary">{school.name}</div>
                     <div className="text-sm text-text-secondary">{school.contactEmail}</div>
+                    {school.contactPhone && <div className="text-sm text-text-secondary">{school.contactPhone}</div>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="text-sm text-text-secondary font-mono bg-background px-2 py-1 rounded">{school.slug}</span>
@@ -236,8 +248,14 @@ export default function PlatformSchoolsPage() {
                     {school._count?.users || 0} Total
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${school.isActive ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-brand-red/10 text-brand-red'}`}>
-                      {school.isActive ? 'Active' : 'Suspended'}
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      school.subscriptionStatus === 'pending_approval'
+                        ? 'bg-brand-gold/10 text-brand-gold'
+                        : school.isActive
+                          ? 'bg-brand-emerald/10 text-brand-emerald'
+                          : 'bg-brand-red/10 text-brand-red'
+                    }`}>
+                      {school.subscriptionStatus === 'pending_approval' ? 'Pending Approval' : school.isActive ? 'Active' : 'Suspended'}
                     </span>
                   </td>
                 </tr>
