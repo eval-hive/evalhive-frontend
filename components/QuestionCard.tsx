@@ -15,12 +15,18 @@ interface QuestionCardProps {
   };
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onImageUpload?: (id: string, file: File) => void;
   readonly?: boolean;
 }
 
-const optionLabels = { a: 'A', b: 'B', c: 'C', d: 'D', e: 'E' };
+const MAX_QUESTION_IMAGE_SIZE = 2 * 1024 * 1024;
 
-export default function QuestionCard({ index, question, onEdit, onDelete, readonly = false }: QuestionCardProps) {
+function resolveImageUrl(imageUrl: string) {
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${imageUrl}`;
+}
+
+export default function QuestionCard({ index, question, onEdit, onDelete, onImageUpload, readonly = false }: QuestionCardProps) {
   const options: { key: 'a'|'b'|'c'|'d'|'e', label: string, value: string }[] = [
     { key: 'a', label: 'A', value: question.optionA },
     { key: 'b', label: 'B', value: question.optionB },
@@ -45,6 +51,31 @@ export default function QuestionCard({ index, question, onEdit, onDelete, readon
 
         {!readonly && (
           <div className="flex items-center gap-2 ml-4">
+            {onImageUpload && (
+              <label
+                className="p-1.5 rounded-md text-text-secondary hover:text-brand-indigo hover:bg-brand-indigo/10 transition-colors cursor-pointer"
+                title="Upload question image"
+              >
+                <ImageIcon className="h-4 w-4" />
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="sr-only"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = '';
+                    if (!file) return;
+
+                    if (file.size > MAX_QUESTION_IMAGE_SIZE) {
+                      alert('Question images must be 2MB or smaller.');
+                      return;
+                    }
+
+                    onImageUpload(question.id, file);
+                  }}
+                />
+              </label>
+            )}
             {onEdit && (
               <button
                 onClick={() => onEdit(question.id)}
@@ -70,7 +101,7 @@ export default function QuestionCard({ index, question, onEdit, onDelete, readon
       {question.imageUrl && (
         <div className="mb-3">
           <img
-            src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${question.imageUrl}`}
+            src={resolveImageUrl(question.imageUrl)}
             alt="Question image"
             className="max-w-xs rounded-md border border-border"
           />

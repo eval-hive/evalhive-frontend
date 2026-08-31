@@ -7,6 +7,8 @@ import DashboardLayout from '@/components/DashboardLayout';
 import QuestionCard from '@/components/QuestionCard';
 import api from '@/lib/api';
 
+const MAX_QUESTION_IMAGE_SIZE = 2 * 1024 * 1024;
+
 const navItems = [
   { name: 'School Dashboard', href: '/admin/school', icon: BookOpen },
   { name: 'Subjects', href: '/admin/school/subjects', icon: BookOpen },
@@ -96,6 +98,28 @@ export default function ExamQuestionsPage() {
     } catch (e) { console.error(e); }
   };
 
+  const uploadQuestionImage = async (questionId: string, file: File) => {
+    setError('');
+    if (file.size > MAX_QUESTION_IMAGE_SIZE) {
+      setError('Question images must be 2MB or smaller.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const data = new FormData();
+      data.append('image', file);
+      await api.post(`/questions/${questionId}/image`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      loadQuestions();
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Failed to upload question image');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const uploadDocument = async () => {
     if (!uploadFile) { setError('Please choose a .docx file'); return; }
     setError('');
@@ -176,7 +200,7 @@ export default function ExamQuestionsPage() {
           <div className="text-center py-8 text-text-secondary text-sm bg-card rounded-lg border border-border">No questions yet. Add your first question below.</div>
         ) : (
           questions.map((q, i) => (
-            <QuestionCard key={q.id} index={i} question={q} onEdit={startEdit} onDelete={deleteQuestion} />
+            <QuestionCard key={q.id} index={i} question={q} onEdit={startEdit} onDelete={deleteQuestion} onImageUpload={uploadQuestionImage} />
           ))
         )}
       </div>

@@ -1,6 +1,23 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'api', 'admin']);
+
+function normalizeSchoolSlug(value: string | null | undefined) {
+  const slug = value?.toLowerCase().trim();
+  if (!slug || slug === '__superadmin' || RESERVED_SUBDOMAINS.has(slug)) return null;
+  return slug;
+}
+
+function extractSlugFromHost(host: string) {
+  const hostname = host.split(':')[0].toLowerCase();
+  const parts = hostname.split('.');
+  if (parts.length >= 3 && !hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
+    return normalizeSchoolSlug(parts[0]);
+  }
+  return null;
+}
+
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
   const userCookie = request.cookies.get('user')?.value;
@@ -9,15 +26,9 @@ export function middleware(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
 
   // Extract School Slug
-  let schoolSlug = process.env.DEV_SCHOOL_SLUG || searchParams.get('school');
+  let schoolSlug = normalizeSchoolSlug(process.env.DEV_SCHOOL_SLUG || searchParams.get('school'));
   if (!schoolSlug) {
-    const parts = host.split('.');
-    if (parts.length >= 3 && !host.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
-      const subdomain = parts[0];
-      if (subdomain !== 'www' && subdomain !== 'admin') {
-        schoolSlug = subdomain;
-      }
-    }
+    schoolSlug = extractSlugFromHost(host);
   }
 
   // Create a new response to modify headers

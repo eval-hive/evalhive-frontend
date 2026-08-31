@@ -2,16 +2,19 @@
  * Frontend Tenant Utility
  */
 
+const RESERVED_SUBDOMAINS = new Set(["www", "app", "api", "admin"]);
+
+export function isReservedSubdomain(subdomain: string): boolean {
+  return RESERVED_SUBDOMAINS.has(subdomain.toLowerCase());
+}
+
 export function extractSlugFromHost(host: string): string | null {
   if (!host) return null;
-  const parts = host.split(".");
-  if (parts.length >= 3 && !host.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
+  const hostname = host.split(":")[0].toLowerCase();
+  const parts = hostname.split(".");
+  if (parts.length >= 3 && !hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
     const subdomain = parts[0];
-    if (subdomain !== "www" && subdomain !== "admin") {
-      return subdomain;
-    } else if (subdomain === "admin") {
-      return null; // Admin is super admin context
-    }
+    if (!isReservedSubdomain(subdomain)) return subdomain;
   }
   return null;
 }
@@ -21,7 +24,10 @@ export function getSchoolSlugClient(): string | null {
     // Check for query param bypass first
     const urlParams = new URLSearchParams(window.location.search);
     const querySlug = urlParams.get("school");
-    if (querySlug) return querySlug === "__superadmin" ? null : querySlug;
+    if (querySlug) {
+      const normalizedQuerySlug = querySlug.toLowerCase().trim();
+      return normalizedQuerySlug === "__superadmin" || isReservedSubdomain(normalizedQuerySlug) ? null : normalizedQuerySlug;
+    }
 
     // Use DEV_SCHOOL_SLUG if defined in process.env
     if (

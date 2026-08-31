@@ -5,6 +5,11 @@ import { useRouter, useParams } from 'next/navigation';
 import { Flag, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, Loader2, Clock } from 'lucide-react';
 import api from '@/lib/api';
 
+function resolveQuestionImageUrl(imageUrl: string) {
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${imageUrl}`;
+}
+
 export default function ExamTakingInterface() {
   const router = useRouter();
   const params = useParams();
@@ -316,7 +321,7 @@ export default function ExamTakingInterface() {
                 {currentQ.imageUrl && (
                   <div className="mb-8 rounded-lg overflow-hidden border border-border max-w-lg">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={currentQ.imageUrl} alt="Question figure" className="w-full h-auto object-cover" />
+                    <img src={resolveQuestionImageUrl(currentQ.imageUrl)} alt="Question figure" className="w-full h-auto object-cover" />
                   </div>
                 )}
 
