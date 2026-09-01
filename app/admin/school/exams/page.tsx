@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Eye, BookOpen, Filter, Trash2 } from 'lucide-react';
+import { Plus, Eye, BookOpen, Filter, Trash2, BarChart3, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ExamStatusBadge from '@/components/ExamStatusBadge';
 import api from '@/lib/api';
@@ -18,11 +18,12 @@ interface Exam {
   title: string;
   examType: string;
   status: 'draft' | 'pending' | 'approved' | 'rejected';
+  resultVisibility: 'hidden' | 'score_only' | 'full_breakdown';
   scheduledDate: string | null;
   subject: { name: string };
   classLevel: { name: string } | null;
   createdByTeacher: { firstName: string; lastName: string } | null;
-  _count: { questions: number };
+  _count: { questions: number; attempts: number };
 }
 
 const formatExamScope = (exam: Exam) => {
@@ -39,6 +40,7 @@ export default function ExamsListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [visibilityLoadingId, setVisibilityLoadingId] = useState<string | null>(null);
 
   useEffect(() => { loadExams(); }, [statusFilter]);
 
@@ -66,6 +68,22 @@ export default function ExamsListPage() {
       loadExams();
     } catch (e: any) {
       setError(e.response?.data?.error || 'Could not delete exam');
+    }
+  };
+
+  const updateResultVisibility = async (exam: Exam, resultVisibility: Exam['resultVisibility']) => {
+    setError('');
+    setMessage('');
+    setVisibilityLoadingId(exam.id);
+
+    try {
+      const res = await api.post(`/results/exams/${exam.id}/publish-results`, { resultVisibility });
+      setExams((current) => current.map((item) => item.id === exam.id ? { ...item, resultVisibility: res.data.exam.resultVisibility } : item));
+      setMessage(resultVisibility === 'hidden' ? 'Student result access has been hidden.' : 'Student result access has been updated.');
+    } catch (e: any) {
+      setError(e.response?.data?.error || 'Could not update result visibility');
+    } finally {
+      setVisibilityLoadingId(null);
     }
   };
 
@@ -109,6 +127,7 @@ export default function ExamsListPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Class</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Questions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Student Results</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Teacher</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3"></th>
@@ -122,6 +141,22 @@ export default function ExamsListPage() {
                     <td className="px-6 py-4 text-sm text-text-secondary">{formatExamScope(exam)}</td>
                     <td className="px-6 py-4"><ExamStatusBadge status={exam.status} /></td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{exam._count.questions}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={exam.resultVisibility}
+                          onChange={(event) => updateResultVisibility(exam, event.target.value as Exam['resultVisibility'])}
+                          disabled={visibilityLoadingId === exam.id || exam.examType !== 'internal'}
+                          className="min-w-36 rounded-lg border border-border bg-background px-2.5 py-2 text-xs font-semibold text-text-primary outline-none focus:border-brand-indigo disabled:cursor-not-allowed disabled:opacity-60"
+                          title={exam.examType !== 'internal' ? 'Mock exams always show full breakdown' : 'Control what students can see'}
+                        >
+                          <option value="hidden">Hidden</option>
+                          <option value="score_only">Score Only</option>
+                          <option value="full_breakdown">Full Breakdown</option>
+                        </select>
+                        {visibilityLoadingId === exam.id && <Loader2 className="h-4 w-4 animate-spin text-brand-indigo" />}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 text-sm text-text-secondary">
                       {exam.createdByTeacher ? `${exam.createdByTeacher.firstName} ${exam.createdByTeacher.lastName}` : 'Admin'}
                     </td>
@@ -134,6 +169,11 @@ export default function ExamsListPage() {
                           className="p-1.5 rounded-md text-text-secondary hover:text-brand-indigo hover:bg-brand-indigo/10 transition-colors"
                           title="View exam">
                           <Eye className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => router.push(`/admin/school/results/exam/${exam.id}`)}
+                          className="p-1.5 rounded-md text-text-secondary hover:text-brand-indigo hover:bg-brand-indigo/10 transition-colors"
+                          title="View results">
+                          <BarChart3 className="h-4 w-4" />
                         </button>
                         <button onClick={() => deleteExam(exam)}
                           className="p-1.5 rounded-md text-text-secondary hover:text-brand-red hover:bg-brand-red/10 transition-colors"

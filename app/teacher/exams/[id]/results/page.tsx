@@ -6,7 +6,6 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { FileText, ArrowLeft, Loader2, Eye, ShieldAlert } from 'lucide-react';
 import api from '@/lib/api';
 import ResultsTable, { Column } from '@/components/ResultsTable';
-import ExportButton from '@/components/ExportButton';
 
 export default function TeacherExamResults({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -19,6 +18,7 @@ export default function TeacherExamResults({ params }: { params: Promise<{ id: s
   // Publication states
   const [visibility, setVisibility] = useState('hidden');
   const [publishing, setPublishing] = useState(false);
+  const [sortMode, setSortMode] = useState<'position' | 'name' | 'admission'>('position');
 
   const fetchResults = async () => {
     try {
@@ -72,18 +72,40 @@ export default function TeacherExamResults({ params }: { params: Promise<{ id: s
     }
   };
 
+  const rankedAttempts = [...attempts]
+    .sort((a, b) => (b.score || 0) - (a.score || 0) || `${a.student.firstName} ${a.student.lastName}`.localeCompare(`${b.student.firstName} ${b.student.lastName}`))
+    .map((attempt, index) => ({
+      ...attempt,
+      position: index + 1,
+      studentName: `${attempt.student.firstName} ${attempt.student.lastName}`,
+      admissionNumber: attempt.student.admissionNumber,
+      percentage: attempt.totalQuestions > 0 ? ((attempt.score || 0) / attempt.totalQuestions) * 100 : 0,
+    }));
+
+  const sortedAttempts = [...rankedAttempts].sort((a, b) => {
+    if (sortMode === 'name') return a.studentName.localeCompare(b.studentName);
+    if (sortMode === 'admission') return a.admissionNumber.localeCompare(b.admissionNumber, undefined, { numeric: true });
+    return a.position - b.position;
+  });
+
   const columns: Column<any>[] = [
+    {
+      header: 'Position',
+      sortable: true,
+      accessorKey: 'position',
+      cell: (row) => <span className="font-bold text-text-primary">{row.position}</span>
+    },
     {
       header: 'Student Name',
       sortable: true,
-      accessorKey: 'id',
-      cell: (row) => `${row.student.firstName} ${row.student.lastName}`
+      accessorKey: 'studentName',
+      cell: (row) => row.studentName
     },
     {
       header: 'Admission No',
       sortable: true,
-      accessorKey: 'id',
-      cell: (row) => row.student.admissionNumber
+      accessorKey: 'admissionNumber',
+      cell: (row) => row.admissionNumber
     },
     {
       header: 'Score',
@@ -93,12 +115,9 @@ export default function TeacherExamResults({ params }: { params: Promise<{ id: s
     },
     {
       header: 'Percentage',
-      sortable: false,
-      accessorKey: 'score',
-      cell: (row) => {
-         const pct = row.totalQuestions > 0 ? (row.score / row.totalQuestions) * 100 : 0;
-         return `${pct.toFixed(1)}%`;
-      }
+      sortable: true,
+      accessorKey: 'percentage',
+      cell: (row) => `${row.percentage.toFixed(1)}%`
     },
     {
       header: 'Time Taken',
@@ -208,7 +227,22 @@ export default function TeacherExamResults({ params }: { params: Promise<{ id: s
         </div>
       )}
 
-      <ResultsTable data={attempts} columns={columns} emptyMessage="No students have completed this exam yet." />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="text-lg font-bold text-text-primary">Student Submissions</h3>
+        <label className="flex items-center gap-2 text-sm text-text-secondary">
+          Sort by
+          <select
+            value={sortMode}
+            onChange={(event) => setSortMode(event.target.value as typeof sortMode)}
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold text-text-primary outline-none focus:border-brand-indigo"
+          >
+            <option value="position">Position (highest score first)</option>
+            <option value="name">Name (A-Z)</option>
+            <option value="admission">Admission Number</option>
+          </select>
+        </label>
+      </div>
+      <ResultsTable data={sortedAttempts} columns={columns} emptyMessage="No students have completed this exam yet." />
     </DashboardLayout>
   );
 }
