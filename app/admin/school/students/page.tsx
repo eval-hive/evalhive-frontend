@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUpRight, Eye, FileUp, GraduationCap, LockKeyhole, Search, UserCheck, UserX } from 'lucide-react';
+import { ArrowUpRight, Eye, FileUp, GraduationCap, LockKeyhole, Search, UserCheck, UserPlus, UserX } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import PeopleManagerDialog from '@/components/PeopleManagerDialog';
 import api from '@/lib/api';
 
 const navItems = [
@@ -34,6 +35,7 @@ export default function StudentsPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [peopleDialog, setPeopleDialog] = useState<{ open: boolean; mode: 'single' | 'bulk' }>({ open: false, mode: 'single' });
 
   useEffect(() => {
     Promise.all([api.get('/sessions/class-levels'), api.get('/sessions')])
@@ -166,9 +168,12 @@ export default function StudentsPage() {
             <option value="false">Inactive</option>
           </select>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => loadStudents(1)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-gray-50">Search</button>
-          <button onClick={() => router.push('/admin/school')} className="inline-flex items-center rounded-lg bg-brand-indigo px-4 py-2 text-sm font-medium text-white hover:bg-brand-indigo/90">
+          <button onClick={() => setPeopleDialog({ open: true, mode: 'single' })} className="inline-flex items-center rounded-lg bg-brand-indigo px-4 py-2 text-sm font-medium text-white hover:bg-brand-indigo/90">
+            <UserPlus className="mr-2 h-4 w-4" /> Add Student
+          </button>
+          <button onClick={() => setPeopleDialog({ open: true, mode: 'bulk' })} className="inline-flex items-center rounded-lg border border-brand-indigo px-4 py-2 text-sm font-medium text-brand-indigo hover:bg-brand-indigo/5">
             <FileUp className="mr-2 h-4 w-4" /> Import Students
           </button>
         </div>
@@ -282,6 +287,19 @@ export default function StudentsPage() {
           <button disabled={pagination.page >= pagination.totalPages} onClick={() => loadStudents(pagination.page + 1)} className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40">Next</button>
         </div>
       </div>
+
+      <PeopleManagerDialog
+        open={peopleDialog.open}
+        type="student"
+        initialMode={peopleDialog.mode}
+        classLevels={classLevels}
+        sessions={sessions}
+        onClose={() => setPeopleDialog(current => ({ ...current, open: false }))}
+        onComplete={successMessage => {
+          setMessage(successMessage);
+          loadStudents(1);
+        }}
+      />
     </DashboardLayout>
   );
 }

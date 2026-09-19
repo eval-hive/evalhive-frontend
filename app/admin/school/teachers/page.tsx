@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, FileUp, LockKeyhole, Search, UserCheck, Users, UserX } from 'lucide-react';
+import { Eye, FileUp, LockKeyhole, Search, UserCheck, UserPlus, Users, UserX } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import PeopleManagerDialog from '@/components/PeopleManagerDialog';
 import api from '@/lib/api';
 
 const navItems = [
@@ -30,6 +31,7 @@ export default function TeachersPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [peopleDialog, setPeopleDialog] = useState<{ open: boolean; mode: 'single' | 'bulk' }>({ open: false, mode: 'single' });
 
   useEffect(() => { loadTeachers(1); }, [filters.is_active, filters.class_teacher]);
 
@@ -105,9 +107,12 @@ export default function TeachersPage() {
             <option value="false">No</option>
           </select>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => loadTeachers(1)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-gray-50">Search</button>
-          <button onClick={() => router.push('/admin/school')} className="inline-flex items-center rounded-lg bg-brand-indigo px-4 py-2 text-sm font-medium text-white hover:bg-brand-indigo/90">
+          <button onClick={() => setPeopleDialog({ open: true, mode: 'single' })} className="inline-flex items-center rounded-lg bg-brand-indigo px-4 py-2 text-sm font-medium text-white hover:bg-brand-indigo/90">
+            <UserPlus className="mr-2 h-4 w-4" /> Add Teacher
+          </button>
+          <button onClick={() => setPeopleDialog({ open: true, mode: 'bulk' })} className="inline-flex items-center rounded-lg border border-brand-indigo px-4 py-2 text-sm font-medium text-brand-indigo hover:bg-brand-indigo/5">
             <FileUp className="mr-2 h-4 w-4" /> Import Teachers
           </button>
         </div>
@@ -170,6 +175,17 @@ export default function TeachersPage() {
           <button disabled={pagination.page >= pagination.totalPages} onClick={() => loadTeachers(pagination.page + 1)} className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40">Next</button>
         </div>
       </div>
+
+      <PeopleManagerDialog
+        open={peopleDialog.open}
+        type="teacher"
+        initialMode={peopleDialog.mode}
+        onClose={() => setPeopleDialog(current => ({ ...current, open: false }))}
+        onComplete={successMessage => {
+          setMessage(successMessage);
+          loadTeachers(1);
+        }}
+      />
     </DashboardLayout>
   );
 }

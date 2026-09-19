@@ -19,7 +19,8 @@ export default function TeacherExamDetailPage() {
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-   const [error, setError] = useState('');
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>(null);
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -48,7 +49,7 @@ export default function TeacherExamDetailPage() {
         examType: res.data.exam.examType,
         negativeMarking: res.data.exam.negativeMarking,
         resultVisibility: res.data.exam.resultVisibility,
-        scheduledDate: res.data.exam.scheduledDate ? new Date(res.data.exam.scheduledDate).toISOString().split('T')[0] : '',
+        scheduledDate: res.data.exam.scheduledDate ? String(res.data.exam.scheduledDate).slice(0, 10) : '',
         startTime: res.data.exam.startTime || '',
         endTime: res.data.exam.endTime || '',
         durationMinutes: res.data.exam.durationMinutes?.toString() || '60',
@@ -85,7 +86,7 @@ export default function TeacherExamDetailPage() {
   };
   
   const handleUpdate = async () => {
-    setError(''); setActionLoading(true);
+    setError(''); setMessage(''); setActionLoading(true);
     try {
       if (!isMock && (!formData.subjectId || !formData.classLevelId || !formData.sessionId || !formData.termId)) {
         setError('Subject, class level, session, and term are required for internal exams.');
@@ -93,12 +94,18 @@ export default function TeacherExamDetailPage() {
         return;
       }
 
-      await api.put(`/exams/${id}`, {
+      const response = await api.put(`/exams/${id}`, {
         ...formData,
+        scheduledDate: formData.scheduledDate ? `${formData.scheduledDate}T00:00:00.000Z` : null,
         durationMinutes: parseInt(formData.durationMinutes),
       });
+      setExam(response.data.exam);
+      setFormData((current: any) => ({
+        ...current,
+        scheduledDate: response.data.exam.scheduledDate ? String(response.data.exam.scheduledDate).slice(0, 10) : '',
+      }));
       setIsEditing(false);
-      loadExam();
+      setMessage('Exam settings updated successfully.');
     } catch (e: any) {
       setError(e.response?.data?.error || 'Failed to update exam');
     } finally { setActionLoading(false); }
@@ -130,6 +137,9 @@ export default function TeacherExamDetailPage() {
 
       {error && (
         <div className="mb-4 bg-brand-red/10 border-l-4 border-brand-red p-3 rounded-md text-sm text-brand-red">{error}</div>
+      )}
+      {message && (
+        <div className="mb-4 rounded-md border border-brand-emerald/30 bg-brand-emerald/10 p-3 text-sm text-brand-emerald">{message}</div>
       )}
 
       {/* Rejection Banner */}

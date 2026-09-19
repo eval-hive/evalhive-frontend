@@ -133,17 +133,16 @@ export default function SchoolAdminDashboard() {
             </button>
           </div>
 
-          {/* CSV Import Teachers placeholder card */}
-          <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex flex-col items-center justify-center text-center hover:border-brand-emerald/50 transition-colors cursor-pointer">
+          <div onClick={() => router.push('/admin/school/teachers')} className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex flex-col items-center justify-center text-center hover:border-brand-emerald/50 transition-colors cursor-pointer">
             <div className="h-12 w-12 rounded-full bg-brand-emerald/10 flex items-center justify-center mb-4">
               <UploadCloud className="h-6 w-6 text-brand-emerald" />
             </div>
-            <h3 className="text-lg font-medium text-text-primary">Import Teachers (CSV)</h3>
+            <h3 className="text-lg font-medium text-text-primary">Manage Teachers</h3>
             <p className="mt-1 text-sm text-text-secondary">
-              Upload a bulk CSV list of new teachers.
+              Add teachers individually or import a CSV/XLSX spreadsheet.
             </p>
             <button className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-emerald hover:bg-brand-emerald/90 focus:outline-none">
-              Upload File
+              Open Teachers
             </button>
           </div>
 

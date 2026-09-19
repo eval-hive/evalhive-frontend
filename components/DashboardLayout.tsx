@@ -8,6 +8,7 @@ import {
   Bell,
   BookOpen,
   Building,
+  CalendarDays,
   ChevronDown,
   FileSpreadsheet,
   FileText,
@@ -56,6 +57,7 @@ const roleNavItems: Record<string, NavItem[]> = {
       icon: BookOpen,
       children: [
         { name: "Subjects", href: "/admin/school/subjects", icon: BookOpen },
+        { name: "Academic Sessions", href: "/admin/school/sessions", icon: CalendarDays },
         { name: "Teachers", href: "/admin/school/teachers", icon: Users },
         {
           name: "Students",

@@ -207,10 +207,10 @@ export default function ExamTakingInterface() {
   const isWarning = timeRemaining !== null && timeRemaining <= 300;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background">
       {/* Top Bar */}
-      <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 shrink-0 z-10 sticky top-0 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-        <div className="flex items-center space-x-4">
+      <header className="z-10 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] sm:px-6">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           <h1 className="text-lg font-semibold text-text-primary hidden sm:block">Exam Session</h1>
           <span className="text-sm px-3 py-1 bg-background-alt text-text-secondary rounded-full">
             {answeredCount} / {questions.length} answered
@@ -222,16 +222,16 @@ export default function ExamTakingInterface() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-6">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-6">
           <div className={`flex items-center font-mono text-xl font-medium px-4 py-1.5 rounded-lg border ${
             isWarning ? 'bg-red-500/10 text-red-600 border-red-500/20 animate-pulse' : 'bg-background-alt text-brand-indigo border-transparent'
           }`}>
             <Clock className="w-5 h-5 mr-2" />
             {m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}
           </div>
-          <button 
+          <button
             onClick={() => setShowConfirmModal(true)}
-            className="px-6 py-2 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 cursor-pointer transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
+            className="cursor-pointer rounded-lg bg-brand-indigo px-4 py-2 font-medium text-white shadow-[0_1px_2px_rgba(17,24,39,0.04)] transition-colors hover:bg-brand-indigo/90 sm:px-6"
           >
             Submit
           </button>
@@ -240,17 +240,17 @@ export default function ExamTakingInterface() {
 
       {/* Warning Banner */}
       {isWarning && (
-        <div className="bg-red-500/10 border-b border-red-500/20 py-2 px-6 flex items-center justify-center text-red-600">
+        <div className="flex shrink-0 items-center justify-center border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-red-600 sm:px-6">
           <AlertTriangle className="w-4 h-4 mr-2" />
           <span className="text-sm font-medium">5 minutes remaining. Your exam will auto-submit when time runs out.</span>
         </div>
       )}
 
       {/* Main Layout */}
-      <div className="flex flex-1 overflow-hidden h-[calc(100vh-4rem)]">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         
         {/* Left Side: Question Navigator */}
-        <aside className="w-80 bg-background-alt border-r border-border flex flex-col hidden lg:flex shrink-0">
+        <aside className="hidden min-h-0 w-80 shrink-0 flex-col border-r border-border bg-background-alt lg:flex">
           <div className="p-4 border-b border-border">
             <h3 className="font-semibold text-text-primary">Questions Map</h3>
           </div>
@@ -296,18 +296,19 @@ export default function ExamTakingInterface() {
         </aside>
 
         {/* Right Side: Question Area */}
-        <main className="flex-1 overflow-y-auto bg-card relative">
-          <div className="max-w-3xl mx-auto p-6 md:p-12 pb-32">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col bg-card">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="mx-auto max-w-4xl p-5 sm:p-6 md:px-10 md:py-8">
             {currentQ && (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <div className="flex justify-between items-start mb-8">
-                  <h2 className="text-2xl font-medium text-text-primary leading-tight flex-1">
+                <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row">
+                  <h2 className="min-w-0 flex-1 text-xl font-medium leading-snug text-text-primary md:text-2xl">
                     <span className="text-brand-indigo font-bold mr-3">{currentIdx + 1}.</span>
                     {currentQ.questionText}
                   </h2>
                   <button 
                     onClick={handleToggleFlag}
-                    className={`ml-4 flex items-center px-3 py-1.5 rounded-md border text-sm transition-colors shrink-0 ${
+                    className={`flex shrink-0 items-center rounded-md border px-3 py-1.5 text-sm transition-colors sm:ml-4 ${
                       currentAns?.flagged 
                         ? 'border-brand-gold bg-brand-gold/10 text-brand-gold font-medium' 
                         : 'border-border bg-background hover:bg-background-alt text-text-secondary'
@@ -319,13 +320,13 @@ export default function ExamTakingInterface() {
                 </div>
 
                 {currentQ.imageUrl && (
-                  <div className="mb-8 rounded-lg overflow-hidden border border-border max-w-lg">
+                  <div className="mb-6 max-w-lg overflow-hidden rounded-lg border border-border">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={resolveQuestionImageUrl(currentQ.imageUrl)} alt="Question figure" className="w-full h-auto object-cover" />
                   </div>
                 )}
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {['a', 'b', 'c', 'd', 'e'].map(optKey => {
                     const optText = currentQ[`option${optKey.toUpperCase()}`];
                     if (!optText) return null;
@@ -336,7 +337,7 @@ export default function ExamTakingInterface() {
                       <button
                         key={optKey}
                         onClick={() => handleSelectOption(optKey)}
-                        className={`w-full text-left p-5 rounded-lg border-2 transition-all flex items-center group ${
+                        className={`group flex min-h-16 w-full items-center rounded-lg border-2 p-4 text-left transition-all ${
                           isSelected 
                             ? 'border-brand-indigo bg-brand-indigo/5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]' 
                             : 'border-border bg-background hover:border-brand-indigo/40 hover:bg-background-alt'
@@ -347,7 +348,7 @@ export default function ExamTakingInterface() {
                         }`}>
                           {optKey.toUpperCase()}
                         </div>
-                        <span className={`text-lg ${isSelected ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
+                        <span className={`min-w-0 break-words text-base leading-6 md:text-lg ${isSelected ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
                           {optText}
                         </span>
                       </button>
@@ -356,10 +357,11 @@ export default function ExamTakingInterface() {
                 </div>
               </div>
             )}
+            </div>
           </div>
 
-          {/* Bottom Fixed Navigation Bar */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-card border-t border-border flex justify-between items-center z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+          {/* Bottom Navigation Bar */}
+          <div className="z-10 flex shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] sm:px-6">
             <button 
               onClick={() => setCurrentIdx(Math.max(0, currentIdx - 1))}
               disabled={currentIdx === 0}
@@ -368,7 +370,7 @@ export default function ExamTakingInterface() {
               <ChevronLeft className="w-5 h-5 mr-1" />
               Previous
             </button>
-            <div className="text-text-secondary font-medium">
+            <div className="hidden font-medium text-text-secondary sm:block">
               Question {currentIdx + 1} of {questions.length}
             </div>
             {currentIdx === questions.length - 1 ? (
@@ -383,7 +385,7 @@ export default function ExamTakingInterface() {
                 onClick={() => setCurrentIdx(Math.min(questions.length - 1, currentIdx + 1))}
                 className="px-5 py-2.5 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 transition-colors flex items-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
               >
-                Next Option
+                Next Question
                 <ChevronRight className="w-5 h-5 ml-1" />
               </button>
             )}
