@@ -1,269 +1,160 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Building, Settings, BarChart3, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { AlertCircle, BarChart3, Building, Eye, KeyRound, Loader2, Plus, ShieldCheck, ShieldOff, X } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import api from '@/lib/api';
 
 const navItems = [
   { name: 'Platform Overview', href: '/admin/platform', icon: BarChart3 },
   { name: 'Schools', href: '/admin/platform/schools', icon: Building },
-  { name: 'Global Settings', href: '/admin/platform/settings', icon: Settings },
 ];
 
-export default function PlatformSchoolsPage() {
-  const [schools, setSchools] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({ 
-    name: '', slug: '', address: '', contactEmail: '',
-    contactPhone: '', adminEmail: '', adminPassword: '' 
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface SchoolRecord {
+  id: string;
+  name: string;
+  slug: string;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  isActive: boolean;
+  subscriptionStatus: string;
+  activeStudents: number;
+  teacherCount: number;
+  examsTaken: number;
+}
 
-  useEffect(() => {
-    fetchSchools();
-  }, []);
+const emptyForm = { name: '', slug: '', address: '', contactEmail: '', contactPhone: '', adminEmail: '', adminPassword: '' };
+
+export default function PlatformSchoolsPage() {
+  const router = useRouter();
+  const [schools, setSchools] = useState<SchoolRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [submitting, setSubmitting] = useState(false);
+  const [actionLoading, setActionLoading] = useState('');
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   const fetchSchools = async () => {
     try {
-      const res = await api.get('/schools');
-      setSchools(res.data.schools);
-    } catch (err) {
-      console.error(err);
+      const response = await api.get('/super-admin/schools');
+      setSchools(response.data.schools || []);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Unable to load schools.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.value;
-    const generatedSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    setFormData({ ...formData, name, slug: generatedSlug });
+  useEffect(() => { fetchSchools(); }, []);
+
+  const handleNameChange = (name: string) => {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    setForm((current) => ({ ...current, name, slug }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setError('');
     try {
-      const schoolRes = await api.post('/schools', {
-        name: formData.name,
-        slug: formData.slug,
-        address: formData.address,
-        contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone
-      });
-      
-      const schoolId = schoolRes.data.school.id;
-      
-      // Step 2: Create the initial admin
-      if (formData.adminEmail && formData.adminPassword) {
-        await api.post(`/schools/${schoolId}/admins`, {
-          email: formData.adminEmail,
-          password: formData.adminPassword
-        });
-      }
-
-      setFormData({ name: '', slug: '', address: '', contactEmail: '', contactPhone: '', adminEmail: '', adminPassword: '' });
-      setShowAddForm(false);
-      fetchSchools();
+      await api.post('/super-admin/schools', form);
+      setForm(emptyForm);
+      setShowForm(false);
+      setNotice('School and initial administrator created successfully.');
+      await fetchSchools();
     } catch (err: any) {
-      if (err.response?.status === 409) {
-        setError(`Slug already taken. Suggestion: ${err.response.data.suggestion}`);
-      } else {
-        setError(err.response?.data?.error || 'Failed to create school');
-      }
+      setError(err.response?.data?.error || 'Failed to create school.');
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
+    }
+  };
+
+  const toggleSchool = async (school: SchoolRecord) => {
+    setActionLoading(school.id);
+    setError('');
+    try {
+      const action = school.isActive ? 'suspend' : 'activate';
+      const response = await api.post(`/super-admin/schools/${school.id}/${action}`);
+      setNotice(response.data.message || `School ${action}d successfully.`);
+      await fetchSchools();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'The school status could not be updated.');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const resetAdmin = async (school: SchoolRecord) => {
+    setActionLoading(`reset-${school.id}`);
+    setError('');
+    try {
+      const response = await api.post(`/super-admin/schools/${school.id}/reset-admin`);
+      setNotice(`Temporary password for ${response.data.adminEmail}: ${response.data.tempPassword}`);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'The administrator password could not be reset.');
+    } finally {
+      setActionLoading('');
     }
   };
 
   return (
-    <DashboardLayout navItems={navItems} title="Schools Management" role="Super Administrator">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary">Registered Schools</h1>
-          <p className="text-sm text-text-secondary mt-1">Manage tenant schools on the platform</p>
-        </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center px-4 py-2 bg-brand-indigo text-white rounded-lg hover:bg-brand-indigo/90 transition-colors"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add School
-        </button>
+    <DashboardLayout navItems={navItems} title="Schools" role="Super Administrator">
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div><h1 className="text-2xl font-bold text-text-primary">School management</h1><p className="mt-1 text-sm text-text-secondary">Approve, inspect, and manage every school on the platform.</p></div>
+        <button onClick={() => setShowForm(true)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-indigo px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-indigo/90"><Plus className="h-4 w-4" /> Add school</button>
       </div>
 
-      {showAddForm && (
-        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Create New School</h2>
-          
-          {error && (
-            <div className="mb-4 bg-brand-red/10 border-l-4 border-brand-red p-4 rounded-md flex items-start">
-              <AlertCircle className="h-5 w-5 text-brand-red mr-3 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-brand-red">{error}</p>
-            </div>
-          )}
+      {error && <div className="mb-5 flex items-start gap-3 rounded-lg border border-brand-red/20 bg-brand-red/5 p-4 text-sm text-brand-red"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</div>}
+      {notice && <div className="mb-5 flex items-start justify-between gap-3 rounded-lg border border-brand-emerald/20 bg-brand-emerald/5 p-4 text-sm text-brand-emerald"><span>{notice}</span><button onClick={() => setNotice('')} title="Dismiss"><X className="h-4 w-4" /></button></div>}
 
-          <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">School Name</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleNameChange}
-                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
-                  placeholder="e.g., Greenfield Academy"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Subdomain Slug</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
-                />
-                {formData.slug && (
-                  <p className="mt-1 text-xs text-text-secondary">
-                    School URL will be: <span className="font-semibold">{formData.slug}.evalhive.ng</span>
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Contact Email</label>
-                <input
-                  type="email"
-                  value={formData.contactEmail}
-                  onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Phone Number</label>
-                <input
-                  type="tel"
-                  value={formData.contactPhone}
-                  onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
-                  placeholder="+234 801 234 5678"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Address</label>
-                <input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
-                />
-              </div>
-            </div>
-
-            <h3 className="text-md font-semibold text-text-primary pt-2">Initial Administrator</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Admin Email</label>
-                <input
-                  type="email"
-                  required
-                  value={formData.adminEmail}
-                  onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
-                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
-                  placeholder="admin@school.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Temporary Password</label>
-                <input
-                  type="password"
-                  required
-                  value={formData.adminPassword}
-                  onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
-                  className="block w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary"
-                  placeholder="••••••••"
-                />
-                <p className="mt-1 text-xs text-text-secondary">Admin will be forced to change this on first login.</p>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="px-4 py-2 text-text-secondary hover:text-text-primary"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex items-center px-4 py-2 bg-brand-indigo text-white rounded-lg hover:bg-brand-indigo/90 disabled:opacity-70"
-              >
-                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                Create School
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="bg-card rounded-lg border border-border overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-        {isLoading ? (
-          <div className="p-8 flex justify-center">
-            <Loader2 className="h-8 w-8 text-brand-indigo animate-spin" />
+      <section className="overflow-hidden rounded-lg border border-border bg-card shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        {loading ? <div className="flex p-12 justify-center"><Loader2 className="h-8 w-8 animate-spin text-brand-indigo" /></div> : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-background"><tr>{['School', 'Domain', 'Students', 'Teachers', 'Attempts', 'Status', 'Actions'].map((heading) => <th key={heading} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">{heading}</th>)}</tr></thead>
+              <tbody className="divide-y divide-border">
+                {schools.map((school) => (
+                  <tr key={school.id} className="hover:bg-background/70">
+                    <td className="px-5 py-4"><p className="font-medium text-text-primary">{school.name}</p><p className="mt-0.5 text-xs text-text-secondary">{school.contactEmail || school.contactPhone || 'No contact details'}</p></td>
+                    <td className="px-5 py-4 text-sm text-text-secondary">{school.slug}.evalhive.ng</td>
+                    <td className="px-5 py-4 text-sm text-text-primary">{school.activeStudents}</td>
+                    <td className="px-5 py-4 text-sm text-text-primary">{school.teacherCount}</td>
+                    <td className="px-5 py-4 text-sm text-text-primary">{school.examsTaken}</td>
+                    <td className="px-5 py-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${school.subscriptionStatus === 'pending_approval' ? 'bg-brand-gold/10 text-brand-gold' : school.isActive ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-brand-red/10 text-brand-red'}`}>{school.subscriptionStatus === 'pending_approval' ? 'Pending approval' : school.isActive ? 'Active' : 'Suspended'}</span></td>
+                    <td className="px-5 py-4"><div className="flex items-center gap-1">
+                      <button onClick={() => router.push(`/admin/platform/schools/${school.id}`)} className="rounded-md p-2 text-text-secondary hover:bg-brand-indigo/10 hover:text-brand-indigo" title="View school"><Eye className="h-4 w-4" /></button>
+                      <button onClick={() => toggleSchool(school)} disabled={actionLoading === school.id} className="rounded-md p-2 text-text-secondary hover:bg-background disabled:opacity-50" title={school.isActive ? 'Suspend school' : school.subscriptionStatus === 'pending_approval' ? 'Approve school' : 'Activate school'}>{actionLoading === school.id ? <Loader2 className="h-4 w-4 animate-spin" /> : school.isActive ? <ShieldOff className="h-4 w-4 text-brand-red" /> : <ShieldCheck className="h-4 w-4 text-brand-emerald" />}</button>
+                      <button onClick={() => resetAdmin(school)} disabled={actionLoading === `reset-${school.id}`} className="rounded-md p-2 text-text-secondary hover:bg-brand-gold/10 hover:text-brand-gold disabled:opacity-50" title="Reset administrator password">{actionLoading === `reset-${school.id}` ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}</button>
+                    </div></td>
+                  </tr>
+                ))}
+                {!schools.length && <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-text-secondary">No schools have been registered.</td></tr>}
+              </tbody>
+            </table>
           </div>
-        ) : schools.length === 0 ? (
-          <div className="p-8 text-center text-text-secondary">
-            No schools found. Create one.
-          </div>
-        ) : (
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-background">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">School</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Slug</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Users</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
-              </tr>
-            </thead>
-            <tbody className="bg-card divide-y divide-border">
-              {schools.map((school) => (
-                <tr key={school.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-text-primary">{school.name}</div>
-                    <div className="text-sm text-text-secondary">{school.contactEmail}</div>
-                    {school.contactPhone && <div className="text-sm text-text-secondary">{school.contactPhone}</div>}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-text-secondary font-mono bg-background px-2 py-1 rounded">{school.slug}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                    {school._count?.users || 0} Total
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      school.subscriptionStatus === 'pending_approval'
-                        ? 'bg-brand-gold/10 text-brand-gold'
-                        : school.isActive
-                          ? 'bg-brand-emerald/10 text-brand-emerald'
-                          : 'bg-brand-red/10 text-brand-red'
-                    }`}>
-                      {school.subscriptionStatus === 'pending_approval' ? 'Pending Approval' : school.isActive ? 'Active' : 'Suspended'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         )}
-      </div>
+      </section>
+
+      {showForm && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-card p-6 shadow-xl">
+        <div className="mb-6 flex items-center justify-between"><div><h2 className="text-xl font-bold text-text-primary">Add school</h2><p className="mt-1 text-sm text-text-secondary">Create the school and its first administrator.</p></div><button onClick={() => setShowForm(false)} className="rounded-md p-2 text-text-secondary hover:bg-background" title="Close"><X className="h-5 w-5" /></button></div>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Field label="School name" value={form.name} onChange={handleNameChange} required />
+          <Field label="Subdomain slug" value={form.slug} onChange={(value) => setForm((current) => ({ ...current, slug: value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))} required helper={form.slug ? `${form.slug}.evalhive.ng` : undefined} />
+          <Field label="Contact email" type="email" value={form.contactEmail} onChange={(value) => setForm((current) => ({ ...current, contactEmail: value }))} />
+          <Field label="Phone number" type="tel" value={form.contactPhone} onChange={(value) => setForm((current) => ({ ...current, contactPhone: value }))} />
+          <div className="md:col-span-2"><Field label="Address" value={form.address} onChange={(value) => setForm((current) => ({ ...current, address: value }))} /></div>
+          <Field label="Administrator email" type="email" value={form.adminEmail} onChange={(value) => setForm((current) => ({ ...current, adminEmail: value }))} required />
+          <Field label="Temporary password" type="password" value={form.adminPassword} onChange={(value) => setForm((current) => ({ ...current, adminPassword: value }))} required />
+          <div className="mt-2 flex justify-end gap-3 md:col-span-2"><button type="button" onClick={() => setShowForm(false)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text-primary hover:bg-background">Cancel</button><button type="submit" disabled={submitting} className="inline-flex items-center gap-2 rounded-lg bg-brand-indigo px-4 py-2 text-sm font-medium text-white disabled:opacity-60">{submitting && <Loader2 className="h-4 w-4 animate-spin" />} Create school</button></div>
+        </form>
+      </div></div>}
     </DashboardLayout>
   );
+}
+
+function Field({ label, type = 'text', value, onChange, required, helper }: { label: string; type?: string; value: string; onChange: (value: string) => void; required?: boolean; helper?: string }) {
+  return <label className="block text-sm font-medium text-text-primary">{label}<input type={type} value={value} required={required} onChange={(event) => onChange(event.target.value)} className="mt-1.5 block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-brand-indigo focus:ring-2 focus:ring-brand-indigo/10" />{helper && <span className="mt-1 block text-xs font-normal text-text-secondary">School URL: {helper}</span>}</label>;
 }

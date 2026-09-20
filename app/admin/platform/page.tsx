@@ -2,263 +2,107 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BarChart3, Building, CheckCircle2, ClipboardCheck, GraduationCap, Loader2, School, Users } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
-import {
-  Building, Users, BarChart3, Plus, Eye, ShieldOff,
-  ShieldCheck, Loader2, KeyRound, X
-} from 'lucide-react';
+import { DonutChart, HorizontalBarChart, LineChart } from '@/components/AnalyticsCharts';
 import api from '@/lib/api';
 
 const navItems = [
   { name: 'Platform Overview', href: '/admin/platform', icon: BarChart3 },
-  { name: 'Schools', href: '/admin/platform', icon: Building },
+  { name: 'Schools', href: '/admin/platform/schools', icon: Building },
 ];
 
-interface School {
-  id: string; name: string; slug: string; contactEmail: string; contactPhone?: string | null;
-  isActive: boolean; subscriptionStatus: string; createdAt: string;
-  trialEndsAt?: string | null; approvedAt?: string | null;
-  activeStudents: number; teacherCount: number; examsTaken: number;
-}
-
-interface Analytics {
-  totalSchools: number; activeSchools: number; totalStudents: number;
-  totalExamsTaken: number; examsTakenThisMonth: number;
-  mostActiveSchool: { name: string; attempts: number } | null;
+interface PlatformAnalytics {
+  overview: { totalSchools: number; activeSchools: number; inactiveSchools: number; pendingSchools: number; totalStudents: number; totalTeachers: number; totalExamsSet: number; conductedExams: number; completedAttempts: number; examsTakenThisMonth: number };
+  schoolStatus: { name: string; value: number }[];
+  schoolGrowth: { label: string; value: number }[];
+  examActivity: { label: string; value: number }[];
+  examStatuses: { name: string; value: number }[];
+  topSchools: { id: string; name: string; students: number; teachers: number; exams: number; attempts: number }[];
 }
 
 export default function SuperAdminDashboard() {
   const router = useRouter();
-  const [schools, setSchools] = useState<School[]>([]);
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [analytics, setAnalytics] = useState<PlatformAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
-  const [form, setForm] = useState({
-    name: '', slug: '', address: '', contactEmail: '', contactPhone: '', adminEmail: '', adminPassword: ''
-  });
-  const [formError, setFormError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  useEffect(() => {
+    api.get('/super-admin/analytics')
+      .then((response) => setAnalytics(response.data.analytics))
+      .catch((err) => setError(err.response?.data?.error || 'Unable to load platform analytics.'))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const fetchData = async () => {
-    try {
-      const [schoolsRes, analyticsRes] = await Promise.all([
-        api.get('/super-admin/schools'),
-        api.get('/super-admin/analytics')
-      ]);
-      setSchools(schoolsRes.data.schools || []);
-      setAnalytics(analyticsRes.data.analytics);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, []);
-
-  const handleToggleSuspend = async (school: School) => {
-    try {
-      setActionLoading(school.id);
-      if (school.isActive) {
-        await api.post(`/super-admin/schools/${school.id}/suspend`);
-      } else {
-        await api.post(`/super-admin/schools/${school.id}/activate`);
-      }
-      await fetchData();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleResetAdmin = async (school: School) => {
-    try {
-      setActionLoading(`reset-${school.id}`);
-      const res = await api.post(`/super-admin/schools/${school.id}/reset-admin`);
-      alert(`New password for ${res.data.adminEmail}: ${res.data.tempPassword}\n\nAsk the admin to change this on first login.`);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const handleCreateSchool = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    setSubmitting(true);
-    try {
-      await api.post('/super-admin/schools', form);
-      setShowModal(false);
-      setForm({ name: '', slug: '', address: '', contactEmail: '', contactPhone: '', adminEmail: '', adminPassword: '' });
-      await fetchData();
-    } catch (err: any) {
-      setFormError(err.response?.data?.error || 'Failed to create school');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const statCards = analytics ? [
-    { label: 'Total Schools', value: analytics.totalSchools, color: 'brand-indigo', icon: Building },
-    { label: 'Active Schools', value: analytics.activeSchools, color: 'brand-emerald', icon: ShieldCheck },
-    { label: 'Total Students', value: analytics.totalStudents, color: 'brand-gold', icon: Users },
-    { label: 'Exams This Month', value: analytics.examsTakenThisMonth, color: 'brand-indigo', icon: BarChart3 },
+  const stats = analytics ? [
+    { label: 'Registered Schools', value: analytics.overview.totalSchools, icon: School },
+    { label: 'Active Schools', value: analytics.overview.activeSchools, icon: CheckCircle2 },
+    { label: 'Active Students', value: analytics.overview.totalStudents, icon: GraduationCap },
+    { label: 'Active Teachers', value: analytics.overview.totalTeachers, icon: Users },
+    { label: 'Exams Set', value: analytics.overview.totalExamsSet, icon: ClipboardCheck },
+    { label: 'Completed Attempts', value: analytics.overview.completedAttempts, icon: BarChart3 },
   ] : [];
 
   return (
-    <DashboardLayout navItems={navItems} title="Platform Admin" role="Super Administrator">
+    <DashboardLayout navItems={navItems} title="Platform Overview" role="Super Administrator">
+      <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary">Platform analytics</h1>
+          <p className="mt-1 text-sm text-text-secondary">A live overview of schools, people, and examination activity across Eval Hive.</p>
+        </div>
+        <button onClick={() => router.push('/admin/platform/schools')} className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-indigo px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-indigo/90">
+          <Building className="h-4 w-4" /> Manage schools
+        </button>
+      </div>
 
-      {/* Analytics Bar */}
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-brand-indigo" /></div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            {statCards.map(card => (
-              <div key={card.label} className="bg-card rounded-lg border border-border p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-                <div className={`w-10 h-10 rounded-lg bg-${card.color}/10 flex items-center justify-center mb-3`}>
-                  <card.icon className={`w-5 h-5 text-${card.color}`} />
+      {loading && <div className="flex min-h-80 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-brand-indigo" /></div>}
+      {error && <div className="rounded-lg border border-brand-red/20 bg-brand-red/5 p-4 text-sm text-brand-red">{error}</div>}
+
+      {analytics && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+            {stats.map(({ label, value, icon: Icon }) => (
+              <div key={label} className="rounded-lg border border-border bg-card p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div><p className="text-sm text-text-secondary">{label}</p><p className="mt-2 text-3xl font-bold text-text-primary">{value.toLocaleString()}</p></div>
+                  <span className="rounded-lg bg-brand-indigo/10 p-2.5 text-brand-indigo"><Icon className="h-5 w-5" /></span>
                 </div>
-                <p className="text-sm font-medium text-text-secondary">{card.label}</p>
-                <p className="text-2xl font-bold text-text-primary mt-1">{card.value}</p>
               </div>
             ))}
           </div>
 
-          {/* Schools Table */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-text-primary">All Schools</h2>
-            <button
-              onClick={() => setShowModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-brand-indigo text-white text-sm font-medium rounded-md hover:bg-brand-indigo/90"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add School
-            </button>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <div className="xl:col-span-2"><LineChart title="Exam activity" description="Completed student attempts over the last six months." data={analytics.examActivity} /></div>
+            <DonutChart title="School status" description={`${analytics.overview.pendingSchools} awaiting approval`} data={analytics.schoolStatus} />
           </div>
 
-          <div className="bg-card rounded-lg border border-border overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <LineChart title="New schools" description="Schools added to the platform over the last six months." data={analytics.schoolGrowth} />
+            <DonutChart title="Exam workflow" description={`${analytics.overview.conductedExams} exams have been taken`} data={analytics.examStatuses} />
+            <HorizontalBarChart title="Most active schools" description="Ranked by completed examination attempts." data={analytics.topSchools.map((school) => ({ name: school.name, value: school.attempts }))} />
+          </div>
+
+          <section className="overflow-hidden rounded-lg border border-border bg-card shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div className="border-b border-border px-5 py-4"><h2 className="font-semibold text-text-primary">School activity breakdown</h2></div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-border">
-                <thead className="bg-background">
-                  <tr>
-                    {['School Name', 'Slug', 'Students', 'Exams Taken', 'Status', 'Actions'].map(h => (
-                      <th key={h} className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
+                <thead className="bg-background"><tr>{['School', 'Students', 'Teachers', 'Exams', 'Attempts'].map((heading) => <th key={heading} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">{heading}</th>)}</tr></thead>
                 <tbody className="divide-y divide-border">
-                  {schools.map(school => (
-                    <tr key={school.id} className="hover:bg-background transition-colors">
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-text-primary">{school.name}</p>
-                        {school.contactEmail && <p className="text-xs text-text-secondary">{school.contactEmail}</p>}
-                        {school.contactPhone && <p className="text-xs text-text-secondary">{school.contactPhone}</p>}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-text-secondary font-mono">{school.slug}</td>
-                      <td className="px-6 py-4 text-sm text-text-primary">{school.activeStudents}</td>
-                      <td className="px-6 py-4 text-sm text-text-primary">{school.examsTaken}</td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          school.subscriptionStatus === 'pending_approval'
-                            ? 'bg-brand-gold/10 text-brand-gold'
-                            : school.isActive
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                        }`}>
-                          {school.subscriptionStatus === 'pending_approval' ? 'Pending Approval' : school.isActive ? 'Active' : 'Suspended'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => router.push(`/admin/platform/schools/${school.id}`)}
-                            className="p-1.5 text-text-secondary hover:text-brand-indigo transition-colors" title="Preview"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleToggleSuspend(school)}
-                            disabled={actionLoading === school.id}
-                            className={`p-1.5 transition-colors ${school.isActive ? 'text-text-secondary hover:text-red-500' : 'text-text-secondary hover:text-green-500'}`}
-                            title={school.isActive ? 'Suspend' : 'Activate'}
-                          >
-                            {actionLoading === school.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (school.isActive ? <ShieldOff className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />)}
-                          </button>
-                          <button
-                            onClick={() => handleResetAdmin(school)}
-                            disabled={actionLoading === `reset-${school.id}`}
-                            className="p-1.5 text-text-secondary hover:text-brand-gold transition-colors" title="Reset Admin Password"
-                          >
-                            {actionLoading === `reset-${school.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </td>
+                  {analytics.topSchools.map((school) => (
+                    <tr key={school.id} className="hover:bg-background/70">
+                      <td className="px-5 py-4 font-medium text-text-primary">{school.name}</td>
+                      <td className="px-5 py-4 text-sm text-text-secondary">{school.students}</td>
+                      <td className="px-5 py-4 text-sm text-text-secondary">{school.teachers}</td>
+                      <td className="px-5 py-4 text-sm text-text-secondary">{school.exams}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-brand-indigo">{school.attempts}</td>
                     </tr>
                   ))}
-
-                  {schools.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-text-secondary text-sm">
-                        No schools registered yet.
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
-          </div>
-        </>
-      )}
-
-      {/* Create School Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-card w-full max-w-md rounded-lg shadow-xl border border-border p-8 relative">
-            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary">
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="text-xl font-bold text-text-primary mb-6">Create New School</h3>
-            <form onSubmit={handleCreateSchool} className="space-y-4">
-              {[
-                { label: 'School Name', key: 'name', type: 'text', placeholder: 'Greenfield Academy' },
-                { label: 'URL Slug', key: 'slug', type: 'text', placeholder: 'greenfield' },
-                { label: 'Address', key: 'address', type: 'text', placeholder: '123 Main St, Lagos' },
-                { label: 'Contact Email', key: 'contactEmail', type: 'email', placeholder: 'info@school.edu.ng' },
-                { label: 'Phone Number', key: 'contactPhone', type: 'tel', placeholder: '+234 801 234 5678' },
-                { label: 'Admin Email', key: 'adminEmail', type: 'email', placeholder: 'admin@school.edu.ng' },
-                { label: 'Admin Password', key: 'adminPassword', type: 'password', placeholder: '••••••••' },
-              ].map(field => (
-                <div key={field.key}>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">{field.label}</label>
-                  <input
-                    type={field.type}
-                    placeholder={field.placeholder}
-                    value={form[field.key as keyof typeof form]}
-                    onChange={e => setForm(prev => ({ ...prev, [field.key]: e.target.value }))}
-                    required={['name', 'slug', 'adminEmail', 'adminPassword'].includes(field.key)}
-                    className="w-full border border-border rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-indigo"
-                  />
-                </div>
-              ))}
-              {formError && <p className="text-red-500 text-sm">{formError}</p>}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-2.5 bg-brand-indigo text-white rounded-lg text-sm font-medium hover:bg-brand-indigo/90 flex items-center justify-center"
-              >
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                {submitting ? 'Creating...' : 'Create School'}
-              </button>
-            </form>
-          </div>
+          </section>
         </div>
       )}
-
     </DashboardLayout>
   );
 }
