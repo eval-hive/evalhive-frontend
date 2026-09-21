@@ -26,6 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { getUser, logout } from "@/lib/auth";
+import api from "@/lib/api";
 import Image from "next/image";
 
 interface NavItem {
@@ -183,15 +184,24 @@ export default function DashboardLayout({
   title,
   role,
 }: DashboardLayoutProps) {
-  const [, setAuthRevision] = React.useState(0);
+  const [user, setUser] = React.useState(() => getUser());
   React.useEffect(() => {
-    const refreshAuth = () => setAuthRevision((value) => value + 1);
+    const refreshAuth = () => setUser(getUser());
     window.addEventListener("auth-updated", refreshAuth);
     return () => window.removeEventListener("auth-updated", refreshAuth);
   }, []);
+  React.useEffect(() => {
+    if (!user?.schoolId || user.schoolLogoUrl) return;
+    api.get("/auth/me").then((response) => {
+      setUser((current) => current ? {
+        ...current,
+        schoolLogoUrl: response.data.user.school?.logoUrl || null,
+        schoolName: response.data.user.school?.name || null,
+      } : current);
+    }).catch(() => undefined);
+  }, [user?.schoolId, user?.schoolLogoUrl]);
   const pathname = usePathname();
   const menuItems = getRoleNavItems(role, navItems);
-  const user = getUser();
   const displayName = user?.displayName || role;
   const initial = displayName.charAt(0).toUpperCase();
   const settingsHref = role.toLowerCase().includes("super")
@@ -257,13 +267,22 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside className="hidden md:flex w-72 flex-col fixed inset-y-0 border-r border-border bg-white z-10 transition-all">
         <Link href={"/"} className="flex h-20 shrink-0 items-center px-6">
-          <Image
-            src="/images/logo.png"
-            alt="EvalHive Logo"
-            width={130}
-            height={32}
-            className="mr-3"
-          />
+          {user?.schoolLogoUrl && user.role !== "super_admin" ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.schoolLogoUrl}
+              alt={`${user.schoolName || "School"} logo`}
+              className="h-12 w-44 object-contain object-left"
+            />
+          ) : (
+            <Image
+              src="/images/logo.png"
+              alt="EvalHive Logo"
+              width={130}
+              height={32}
+              className="mr-3"
+            />
+          )}
         </Link>
 
         <div className="flex flex-1 flex-col overflow-y-auto">

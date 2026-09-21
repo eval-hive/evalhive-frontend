@@ -8,6 +8,8 @@ export interface User {
   mustChangePassword: boolean;
   displayName: string;
   avatarUrl?: string | null;
+  schoolLogoUrl?: string | null;
+  schoolName?: string | null;
 }
 
 export const getAuthToken = () => {

@@ -19,6 +19,7 @@ interface SchoolRecord {
   contactPhone?: string | null;
   address?: string | null;
   adminEmail?: string | null;
+  logoUrl?: string | null;
   isActive: boolean;
   subscriptionStatus: string;
   activeStudents: number;
@@ -169,10 +170,11 @@ export default function PlatformSchoolsPage() {
         {loading ? <div className="flex p-12 justify-center"><Loader2 className="h-8 w-8 animate-spin text-brand-indigo" /></div> : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
-              <thead className="bg-background"><tr>{['School', 'Domain', 'Students', 'Teachers', 'Attempts', 'Status', 'Actions'].map((heading) => <th key={heading} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">{heading}</th>)}</tr></thead>
+              <thead className="bg-background"><tr>{['Logo', 'School', 'Domain', 'Students', 'Teachers', 'Attempts', 'Status', 'Actions'].map((heading) => <th key={heading} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">{heading}</th>)}</tr></thead>
               <tbody className="divide-y divide-border">
                 {schools.map((school) => (
                   <tr key={school.id} className="hover:bg-background/70">
+                    <td className="px-5 py-4"><div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg border border-border bg-white">{school.logoUrl ? <img src={school.logoUrl} alt={`${school.name} logo`} className="h-full w-full object-contain p-1" /> : <Building className="h-5 w-5 text-text-secondary" />}</div></td>
                     <td className="px-5 py-4"><p className="font-medium text-text-primary">{school.name}</p><p className="mt-0.5 text-xs text-text-secondary">{school.contactEmail || school.contactPhone || 'No contact details'}</p></td>
                     <td className="px-5 py-4 text-sm text-text-secondary">{school.slug}.evalhive.ng</td>
                     <td className="px-5 py-4 text-sm text-text-primary">{school.activeStudents}</td>
@@ -188,7 +190,7 @@ export default function PlatformSchoolsPage() {
                     </div></td>
                   </tr>
                 ))}
-                {!schools.length && <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-text-secondary">No schools have been registered.</td></tr>}
+                {!schools.length && <tr><td colSpan={8} className="px-5 py-12 text-center text-sm text-text-secondary">No schools have been registered.</td></tr>}
               </tbody>
             </table>
           </div>

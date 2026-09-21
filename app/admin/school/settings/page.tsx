@@ -5,6 +5,7 @@ import { Building2, Camera, Loader2, Save, Settings } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import AccountSettings from '@/components/AccountSettings';
 import api from '@/lib/api';
+import { getAuthToken, getUser, loginAuth } from '@/lib/auth';
 
 const navItems = [{ name: 'Settings', href: '/admin/school/settings', icon: Settings }];
 
@@ -67,6 +68,12 @@ export default function SchoolSettingsPage() {
       body.append('logo', file);
       const response = await api.post('/schools/settings/logo', body, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSchool((current) => current ? { ...current, logoUrl: response.data.school.logoUrl } : current);
+      const currentUser = getUser();
+      const token = getAuthToken();
+      if (currentUser && token) {
+        loginAuth(token, { ...currentUser, schoolLogoUrl: response.data.school.logoUrl });
+        window.dispatchEvent(new Event('auth-updated'));
+      }
       setMessage('School logo updated.');
     } catch (err: any) {
       setError(err.response?.data?.error || 'School logo could not be uploaded.');
