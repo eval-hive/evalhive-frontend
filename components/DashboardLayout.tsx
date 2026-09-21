@@ -90,6 +90,7 @@ const roleNavItems: Record<string, NavItem[]> = {
       ],
     },
     { name: "Results", href: "/admin/school/results", icon: BarChart3 },
+    { name: "Settings", href: "/admin/school/settings", icon: Settings },
   ],
   "super administrator": [
     {
@@ -99,6 +100,7 @@ const roleNavItems: Record<string, NavItem[]> = {
       exact: true,
     },
     { name: "Schools", href: "/admin/platform/schools", icon: Building },
+    { name: "Settings", href: "/admin/platform/settings", icon: Settings },
   ],
   student: [
     {
@@ -181,11 +183,22 @@ export default function DashboardLayout({
   title,
   role,
 }: DashboardLayoutProps) {
+  const [, setAuthRevision] = React.useState(0);
+  React.useEffect(() => {
+    const refreshAuth = () => setAuthRevision((value) => value + 1);
+    window.addEventListener("auth-updated", refreshAuth);
+    return () => window.removeEventListener("auth-updated", refreshAuth);
+  }, []);
   const pathname = usePathname();
   const menuItems = getRoleNavItems(role, navItems);
   const user = getUser();
   const displayName = user?.displayName || role;
   const initial = displayName.charAt(0).toUpperCase();
+  const settingsHref = role.toLowerCase().includes("super")
+    ? "/admin/platform/settings"
+    : role.toLowerCase().includes("school admin")
+      ? "/admin/school/settings"
+      : null;
 
   const renderNavLink = (item: NavItem, nested = false) => {
     const isActive = isPathActive(pathname, item);
@@ -265,7 +278,10 @@ export default function DashboardLayout({
         <div className="space-y-3 border-t border-border p-4">
           <div className="flex items-center gap-3 rounded-lg bg-background px-3 py-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-white text-sm font-bold text-brand-indigo shadow-sm">
-              {initial}
+              {user?.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatarUrl} alt="Profile" className="h-full w-full rounded-full object-cover" />
+              ) : initial}
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-text-primary">
@@ -317,13 +333,13 @@ export default function DashboardLayout({
                 <Bell className="h-5 w-5" aria-hidden="true" />
               </button>
 
-              <button
-                type="button"
+              {settingsHref ? <Link
+                href={settingsHref}
                 className="hidden rounded-lg p-2.5 text-text-secondary transition-colors hover:bg-background-alt hover:text-text-primary sm:inline-flex"
               >
                 <span className="sr-only">Settings</span>
                 <Settings className="h-5 w-5" aria-hidden="true" />
-              </button>
+              </Link> : null}
 
               <div className="hidden lg:block lg:h-8 lg:w-px lg:bg-border" />
 
@@ -335,7 +351,10 @@ export default function DashboardLayout({
                   </p>
                 </div>
                 <div className="h-11 w-11 rounded-full border border-border bg-white flex items-center justify-center text-brand-indigo font-bold shadow-sm">
-                  {initial || <User className="h-5 w-5" />}
+                  {user?.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.avatarUrl} alt="Profile" className="h-full w-full rounded-full object-cover" />
+                  ) : initial || <User className="h-5 w-5" />}
                 </div>
               </div>
             </div>

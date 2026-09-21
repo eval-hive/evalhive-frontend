@@ -60,6 +60,7 @@ export default function ExamDetailPage() {
         endTime: res.data.exam.endTime || '',
         durationMinutes: res.data.exam.durationMinutes?.toString() || '60',
         optionsCount: res.data.exam.optionsCount || 4,
+        responseMode: res.data.exam.responseMode || 'multiple_choice',
         subjectId: res.data.exam.subjectId,
         classLevelId: res.data.exam.classLevelId,
         sessionId: res.data.exam.sessionId,
@@ -245,6 +246,14 @@ export default function ExamDetailPage() {
                   <option value={5}>5 Options (A-E)</option>
                 </select>
               </div>
+              {exam.examType !== 'jamb_mock' && <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1">Response Mode</label>
+                <select value={formData.responseMode} onChange={(e) => updateForm('responseMode', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
+                  <option value="multiple_choice">Multiple Choice</option>
+                  <option value="theory" disabled>Theory (Free Response) - coming later</option>
+                  <option value="hybrid" disabled>Hybrid - coming later</option>
+                </select>
+              </div>}
               <div>
                 <label className="block text-xs font-medium text-text-secondary mb-1">Duration (minutes)</label>
                 <input type="number" min="1" value={formData.durationMinutes} onChange={(e) => updateForm('durationMinutes', e.target.value)}
@@ -323,6 +332,7 @@ export default function ExamDetailPage() {
             <div><span className="text-text-secondary block">Time</span><span className="font-medium text-text-primary">{exam.startTime || '—'} – {exam.endTime || '—'}</span></div>
             <div><span className="text-text-secondary block">Duration</span><span className="font-medium text-text-primary">{exam.durationMinutes ? `${exam.durationMinutes} min` : '—'}</span></div>
             <div><span className="text-text-secondary block">Options/Question</span><span className="font-medium text-text-primary">{exam.optionsCount || 4}</span></div>
+            <div><span className="text-text-secondary block">Response Mode</span><span className="font-medium capitalize text-text-primary">{(exam.responseMode || 'multiple_choice').replace('_', ' ')}</span></div>
           </div>
         )}
 

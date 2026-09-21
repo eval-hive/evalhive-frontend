@@ -7,6 +7,7 @@ export interface User {
   schoolId: string | null;
   mustChangePassword: boolean;
   displayName: string;
+  avatarUrl?: string | null;
 }
 
 export const getAuthToken = () => {

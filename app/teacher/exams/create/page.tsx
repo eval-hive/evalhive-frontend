@@ -23,7 +23,7 @@ export default function TeacherCreateExamPage() {
   const [form, setForm] = useState({
     title: '', subjectId: '', classLevelId: '', sessionId: '', termId: '',
     examType: 'internal', scheduledDate: '', startTime: '', endTime: '',
-    durationMinutes: '60', negativeMarking: false, resultVisibility: 'hidden', optionsCount: 4,
+    durationMinutes: '60', negativeMarking: false, resultVisibility: 'hidden', optionsCount: 4, responseMode: 'multiple_choice',
   });
 
   useEffect(() => {
@@ -80,6 +80,16 @@ export default function TeacherCreateExamPage() {
               <option value="waec_mock">WAEC Mock Paper</option>
             </select>
           </div>
+
+          {form.examType !== 'jamb_mock' && <div>
+            <label className="block text-sm font-medium text-text-primary mb-1">Response Mode</label>
+            <select value={form.responseMode} onChange={(e) => update('responseMode', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background">
+              <option value="multiple_choice">Multiple Choice</option>
+              <option value="theory" disabled>Theory (Free Response) - coming later</option>
+              <option value="hybrid" disabled>Hybrid - coming later</option>
+            </select>
+            <p className="mt-1 text-xs text-text-secondary">JAMB is always multiple choice. Theory and Hybrid are reserved for a later release.</p>
+          </div>}
 
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">Title</label>
