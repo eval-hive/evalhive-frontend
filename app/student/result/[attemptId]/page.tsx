@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { FileText, CheckCircle, XCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
+import MathText from '@/components/MathText';
 
 export default function ExamResult() {
   const router = useRouter();
@@ -121,18 +122,18 @@ export default function ExamResult() {
                           {isCorrect ? <CheckCircle className="w-6 h-6 text-green-500" /> : <XCircle className="w-6 h-6 text-red-500" />}
                        </div>
                        <div className="flex-1">
-                          <p className="text-lg font-medium text-text-primary mb-4"><span className="text-brand-indigo font-bold mr-2">{idx + 1}.</span> {q.questionText}</p>
+                          <p className="text-lg font-medium text-text-primary mb-4"><span className="text-brand-indigo font-bold mr-2">{idx + 1}.</span> <MathText>{q.questionText}</MathText></p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div className="p-4 rounded-lg bg-background-alt border border-border">
                                <p className="text-xs font-semibold text-text-secondary uppercase mb-1">Your Answer</p>
                                <p className={`font-medium ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
-                                 {ans.selectedOption ? `${ans.selectedOption.toUpperCase()}: ${q[`option${ans.selectedOption.toUpperCase()}`]}` : 'Unanswered'}
+                                 {ans.selectedOption ? <><span>{ans.selectedOption.toUpperCase()}:</span> <MathText>{q[`option${ans.selectedOption.toUpperCase()}`]}</MathText></> : 'Unanswered'}
                                </p>
                              </div>
                              <div className="p-4 rounded-lg bg-green-500/5 border border-green-500/20">
                                <p className="text-xs font-semibold text-text-secondary uppercase mb-1">Correct Answer</p>
                                <p className="font-medium text-green-600">
-                                 {q.correctOption.toUpperCase()}: {q[`option${q.correctOption.toUpperCase()}`]}
+                                 <span>{q.correctOption.toUpperCase()}:</span> <MathText>{q[`option${q.correctOption.toUpperCase()}`]}</MathText>
                                </p>
                              </div>
                           </div>

@@ -7,6 +7,7 @@ import { FileSpreadsheet, ArrowLeft, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import ResultsTable, { Column } from '@/components/ResultsTable';
 import ExportButton from '@/components/ExportButton';
+import MathText from '@/components/MathText';
 
 export default function AdminExamResultDetail({ params }: { params: Promise<{ examId: string }> }) {
   const router = useRouter();
@@ -171,7 +172,7 @@ export default function AdminExamResultDetail({ params }: { params: Promise<{ ex
                   <div key={qa.questionId} className="border-b border-border last:border-0 pb-6 last:pb-0">
                      <p className="text-sm font-medium text-text-primary mb-2 line-clamp-2">
                         <span className="font-bold mr-2 text-brand-indigo">Q{idx + 1}.</span> 
-                        {qa.questionText}
+                        <MathText>{qa.questionText}</MathText>
                      </p>
                      <div className="flex items-center gap-4 text-xs mt-3">
                         <div className="flex-1 w-full bg-gray-200 rounded-full h-2.5">

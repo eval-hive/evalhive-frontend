@@ -297,6 +297,7 @@ export default function TeacherQuestionsPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">Question Text</label>
+            <p className="mb-1 text-xs text-text-secondary">Math: use <code>$x^2$</code>, <code>\\frac{'{'}a{'}'}{'{'}b{'}'}</code>, or shorthand <code>x^2</code>.</p>
             <textarea value={form.questionText} onChange={(e) => update('questionText', e.target.value)} rows={3}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background resize-none" placeholder="Enter the question..." />
           </div>

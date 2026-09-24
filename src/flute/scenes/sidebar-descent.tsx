@@ -1,0 +1,29 @@
+"use client";
+
+import { Surface } from "@webprodigies/flute";
+import type { ReactNode } from "react";
+import SchoolAdminDashboard from "../../../app/admin/school/page";
+import { DashboardPresentation } from "../../../components/DashboardPresentation";
+import "../sidebar-descent.css";
+
+const presentation = {
+  spatial: true,
+  splitWorkspace: false,
+  activePath: "/admin/school",
+  wrap(id: string, children: ReactNode) {
+    const paint = id.endsWith("-paint");
+    return <Surface key={id} id={id} style={paint
+      ? { position: "absolute", inset: 0, pointerEvents: "none" }
+      : id === "workspace" ? { flex: 1, minWidth: 0 } : undefined}>
+      {children}
+    </Surface>;
+  },
+};
+
+export default function SidebarDescent() {
+  return <DashboardPresentation.Provider value={presentation}>
+    <Surface id="dashboard" className="school-sidebar-scene" style={{ position: "absolute", left: 80, top: 50, width: 1440, height: 900 }}>
+      <SchoolAdminDashboard />
+    </Surface>
+  </DashboardPresentation.Provider>;
+}

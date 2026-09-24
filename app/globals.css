@@ -66,3 +66,13 @@ input::placeholder,
 textarea::placeholder {
   color: #9CA3AF;
 }
+
+.math-text .katex {
+  font-size: 1.08em;
+}
+
+.math-text .katex-display {
+  margin: 0.35rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}

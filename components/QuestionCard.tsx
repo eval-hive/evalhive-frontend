@@ -1,4 +1,5 @@
 import { Edit, Trash2, ImageIcon } from 'lucide-react';
+import MathText from './MathText';
 
 interface QuestionCardProps {
   index: number;
@@ -45,7 +46,7 @@ export default function QuestionCard({ index, question, onEdit, onDelete, onImag
             Question {index + 1}
           </span>
           <p className="mt-1 text-sm text-text-primary font-medium leading-relaxed">
-            {question.questionText}
+            <MathText>{question.questionText}</MathText>
           </p>
         </div>
 
@@ -125,7 +126,7 @@ export default function QuestionCard({ index, question, onEdit, onDelete, onImag
             }`}>
               {opt.label}
             </span>
-            <span className="truncate">{opt.value}</span>
+            <span className="min-w-0 break-words"><MathText>{opt.value}</MathText></span>
           </div>
         ))}
       </div>

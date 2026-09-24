@@ -1,5 +1,8 @@
 'use client';
 
+import { useId } from 'react';
+import { formatMetric } from './AnalyticsPresentation';
+
 type ChartDatum = {
   label?: string;
   name?: string;
@@ -20,13 +23,17 @@ export function LineChart({
   data,
   valueKey = 'value',
   suffix = '',
+  progress = 1,
 }: {
   title: string;
   description?: string;
   data: ChartDatum[];
   valueKey?: 'value' | 'average' | 'attempts';
   suffix?: string;
+  progress?: number;
 }) {
+  const clipId = useId().replace(/:/g, '');
+  const reveal = Math.max(0, Math.min(1, progress));
   const values = data.map((item) => Number(item[valueKey] || 0));
   const max = Math.max(100, ...values, 1);
   const points = data.map((item, index) => {
@@ -45,7 +52,9 @@ export function LineChart({
             {[40, 86, 132, 178].map((y) => (
               <line key={y} x1="42" x2="558" y1={y} y2={y} stroke="#E5E7EB" strokeWidth="1" />
             ))}
+            <defs><clipPath id={clipId}><rect x="0" y="0" width={600 * reveal} height="220" /></clipPath></defs>
             <polyline
+              clipPath={`url(#${clipId})`}
               points={points.map(({ x, y }) => `${x},${y}`).join(' ')}
               fill="none"
               stroke="#2B317F"
@@ -54,10 +63,10 @@ export function LineChart({
               strokeLinejoin="round"
             />
             {points.map(({ x, y, item }, index) => (
-              <g key={`${item.label}-${index}`}>
+              <g key={`${item.label}-${index}`} opacity={Math.max(0, Math.min(1, reveal * (points.length + 1) - index))}>
                 <circle cx={x} cy={y} r="5" fill="#FFFFFF" stroke="#2B317F" strokeWidth="3" />
                 <text x={x} y={Math.max(y - 13, 20)} textAnchor="middle" fontSize="11" fill="#111827">
-                  {Number(item[valueKey] || 0)}{suffix}
+                  {formatMetric(Number(item[valueKey] || 0), reveal)}{suffix}
                 </text>
                 <text x={x} y="207" textAnchor="middle" fontSize="11" fill="#6B7280">{item.label}</text>
               </g>
@@ -75,13 +84,16 @@ export function HorizontalBarChart({
   data,
   valueKey = 'value',
   suffix = '',
+  progress = 1,
 }: {
   title: string;
   description?: string;
   data: ChartDatum[];
   valueKey?: 'value' | 'average' | 'attempts';
   suffix?: string;
+  progress?: number;
 }) {
+  const reveal = Math.max(0, Math.min(1, progress));
   const max = Math.max(...data.map((item) => Number(item[valueKey] || 0)), 1);
 
   return (
@@ -96,12 +108,12 @@ export function HorizontalBarChart({
               <div key={`${item.name}-${index}`}>
                 <div className="mb-1.5 flex items-center justify-between gap-4 text-sm">
                   <span className="truncate font-medium text-text-primary">{item.name}</span>
-                  <span className="shrink-0 text-text-secondary">{value}{suffix}</span>
+                  <span className="shrink-0 text-text-secondary">{formatMetric(value, reveal)}{suffix}</span>
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full bg-background">
                   <div
                     className="h-full rounded-full bg-brand-indigo"
-                    style={{ width: `${Math.max((value / max) * 100, value ? 3 : 0)}%` }}
+                    style={{ width: `${reveal * Math.max((value / max) * 100, value ? 3 : 0)}%` }}
                   />
                 </div>
               </div>
@@ -113,14 +125,15 @@ export function HorizontalBarChart({
   );
 }
 
-export function DonutChart({ title, description, data }: { title: string; description?: string; data: ChartDatum[] }) {
+export function DonutChart({ title, description, data, progress = 1 }: { title: string; description?: string; data: ChartDatum[]; progress?: number }) {
+  const reveal = Math.max(0, Math.min(1, progress));
   const filtered = data.filter((item) => Number(item.value || 0) > 0);
   const total = filtered.reduce((sum, item) => sum + Number(item.value || 0), 0);
   let cursor = 0;
   const gradient = filtered.map((item, index) => {
     const start = cursor;
     cursor += (Number(item.value || 0) / total) * 100;
-    return `${PALETTE[index % PALETTE.length]} ${start}% ${cursor}%`;
+    return `${PALETTE[index % PALETTE.length]} ${start * reveal}% ${cursor * reveal}%`;
   }).join(', ');
 
   return (
@@ -131,12 +144,12 @@ export function DonutChart({ title, description, data }: { title: string; descri
         <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row sm:items-center">
           <div
             className="relative h-36 w-36 shrink-0 rounded-full"
-            style={{ background: `conic-gradient(${gradient})` }}
+            style={{ background: `conic-gradient(${gradient}, #F3F4F6 ${reveal * 100}% 100%)` }}
             role="img"
             aria-label={`${title}: ${total} total`}
           >
             <div className="absolute inset-7 flex items-center justify-center rounded-full bg-card text-center">
-              <div><strong className="block text-2xl text-text-primary">{total}</strong><span className="text-xs text-text-secondary">Total</span></div>
+              <div><strong className="block text-2xl text-text-primary">{formatMetric(total, reveal)}</strong><span className="text-xs text-text-secondary">Total</span></div>
             </div>
           </div>
           <div className="w-full space-y-2.5">
@@ -146,7 +159,7 @@ export function DonutChart({ title, description, data }: { title: string; descri
                   <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: PALETTE[index % PALETTE.length] }} />
                   <span className="truncate">{item.name}</span>
                 </span>
-                <span className="font-semibold text-text-primary">{item.value}</span>
+                <span className="font-semibold text-text-primary">{formatMetric(Number(item.value || 0), reveal)}</span>
               </div>
             ))}
           </div>

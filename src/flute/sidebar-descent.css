@@ -1,0 +1,36 @@
+/* Spatial-only layout plumbing. Original paint, typography and controls are reused. */
+.school-sidebar-scene .dashboard-shell {
+  position: relative;
+  height: 900px;
+  overflow: visible;
+  background: transparent;
+  transform-style: preserve-3d;
+}
+.school-sidebar-scene aside {
+  display: flex;
+  position: absolute;
+  height: 900px;
+  background: transparent;
+  border: 0;
+  z-index: auto;
+  transition: none;
+  transform-style: preserve-3d;
+}
+.school-sidebar-scene .sidebar-scroll,
+.school-sidebar-scene nav,
+.school-sidebar-scene details,
+.school-sidebar-scene summary,
+.school-sidebar-scene .nav-children,
+.school-sidebar-scene .sidebar-footer {
+  overflow: visible;
+  transform-style: preserve-3d;
+}
+.school-sidebar-scene .sidebar-footer { position: relative; }
+.school-sidebar-scene .dashboard-workspace { height: 900px; padding-left: 288px; }
+.school-sidebar-scene [data-flute-id="page-paint"] > [data-flute-content],
+.school-sidebar-scene [data-flute-id="sidebar-paint"] > [data-flute-content] { height: 100%; }
+.school-sidebar-scene [data-flute-id^="nav-"],
+.school-sidebar-scene [data-flute-id="logout"],
+.school-sidebar-scene [data-flute-id="profile"] { border-radius: 8px; }
+/* Lifted transparent rows carry the same white paint as their original sidebar. */
+.school-sidebar-scene [data-flute-id^="nav-"] > [data-flute-content] { background: white; border-radius: 8px; }

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Flag, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, Loader2, Clock } from 'lucide-react';
 import api from '@/lib/api';
+import MathText from '@/components/MathText';
 
 function resolveQuestionImageUrl(imageUrl: string) {
   if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
@@ -304,7 +305,7 @@ export default function ExamTakingInterface() {
                 <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row">
                   <h2 className="min-w-0 flex-1 text-xl font-medium leading-snug text-text-primary md:text-2xl">
                     <span className="text-brand-indigo font-bold mr-3">{currentIdx + 1}.</span>
-                    {currentQ.questionText}
+                    <MathText>{currentQ.questionText}</MathText>
                   </h2>
                   <button 
                     onClick={handleToggleFlag}
@@ -349,7 +350,7 @@ export default function ExamTakingInterface() {
                           {optKey.toUpperCase()}
                         </div>
                         <span className={`min-w-0 break-words text-base leading-6 md:text-lg ${isSelected ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
-                          {optText}
+                          <MathText>{optText}</MathText>
                         </span>
                       </button>
                     );

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { FileSpreadsheet, UploadCloud, Loader2, Trash2, CheckCircle } from 'lucide-react';
 import api from '@/lib/api';
+import MathText from '@/components/MathText';
 
 const navItems = [
   { name: 'School Dashboard', href: '/admin/school', icon: FileSpreadsheet },
@@ -270,6 +271,9 @@ export default function AdminImportPage() {
 
                 <div className="mb-4">
                   <label className="text-xs font-medium text-text-secondary uppercase mb-1 block">Question</label>
+                  <div className="mb-2 rounded-md border border-brand-indigo/15 bg-brand-indigo/5 px-3 py-2 text-xs text-text-secondary">
+                    Use <code>$x^2$</code> or <code>\\(x^2\\)</code> for equations. Common shorthand such as <code>x^2</code> and <code>x_1</code> is also formatted automatically.
+                  </div>
                   <textarea
                     value={q.question_text}
                     onChange={e => handleQuestionChange(idx, 'question_text', e.target.value)}

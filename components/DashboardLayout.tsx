@@ -28,6 +28,7 @@ import {
 import { getUser, logout } from "@/lib/auth";
 import api from "@/lib/api";
 import Image from "next/image";
+import { DashboardPresentation } from "./DashboardPresentation";
 
 interface NavItem {
   name: string;
@@ -184,9 +185,10 @@ export default function DashboardLayout({
   title,
   role,
 }: DashboardLayoutProps) {
-  const [user, setUser] = React.useState(() => getUser());
+  const [user, setUser] = React.useState<ReturnType<typeof getUser>>(null);
   React.useEffect(() => {
     const refreshAuth = () => setUser(getUser());
+    refreshAuth();
     window.addEventListener("auth-updated", refreshAuth);
     return () => window.removeEventListener("auth-updated", refreshAuth);
   }, []);
@@ -200,7 +202,11 @@ export default function DashboardLayout({
       } : current);
     }).catch(() => undefined);
   }, [user?.schoolId, user?.schoolLogoUrl]);
-  const pathname = usePathname();
+  const routePath = usePathname();
+  const presentation = React.useContext(DashboardPresentation);
+  const { wrap } = presentation;
+  const wrapWorkspacePart = (id: string, content: React.ReactNode) => presentation.splitWorkspace ? wrap(id, content) : content;
+  const pathname = presentation.activePath || routePath;
   const menuItems = getRoleNavItems(role, navItems);
   const displayName = user?.displayName || role;
   const initial = displayName.charAt(0).toUpperCase();
@@ -234,39 +240,39 @@ export default function DashboardLayout({
     );
   };
 
-  const renderNavItem = (item: NavItem) => {
-    if (!item.children?.length) return renderNavLink(item);
+  const renderNavItem = (item: NavItem, index: number) => {
+    if (!item.children?.length) return wrap(`nav-${index}`, renderNavLink(item));
 
     const isActive =
       item.children.some((child) => isPathActive(pathname, child)) ||
       isPathActive(pathname, item);
+    const summaryClass = `flex cursor-pointer list-none items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-all
+      [&::-webkit-details-marker]:hidden
+      ${isActive ? "bg-brand-indigo/10 text-brand-indigo" : "text-text-secondary hover:bg-background-alt hover:text-text-primary"}`;
+    const summaryContent = <>
+      <item.icon className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive ? "text-brand-indigo" : "text-text-secondary group-hover/nav:text-text-primary"}`} />
+      <span className="flex-1">{item.name}</span>
+      <ChevronDown className="h-4 w-4 text-text-secondary transition-transform group-open/nav:rotate-180" />
+    </>;
     return (
-      <details key={item.name} open={isActive} className="group/nav">
-        <summary
-          className={`
-            flex cursor-pointer list-none items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-all
-            [&::-webkit-details-marker]:hidden
-            ${isActive ? "bg-brand-indigo/10 text-brand-indigo" : "text-text-secondary hover:bg-background-alt hover:text-text-primary"}
-          `}
-        >
-          <item.icon
-            className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive ? "text-brand-indigo" : "text-text-secondary group-hover/nav:text-text-primary"}`}
-          />
-          <span className="flex-1">{item.name}</span>
-          <ChevronDown className="h-4 w-4 text-text-secondary transition-transform group-open/nav:rotate-180" />
+      <details key={item.name} open={isActive || presentation.spatial} className="group/nav">
+        <summary className={presentation.spatial ? "list-none [&::-webkit-details-marker]:hidden" : summaryClass}>
+          {presentation.spatial ? wrap(`nav-${index}`, <div className={summaryClass}>{summaryContent}</div>) : summaryContent}
         </summary>
-        <div className="ml-5 mt-1 space-y-1 border-l border-border pl-3">
-          {item.children.map((child) => renderNavLink(child, true))}
+        <div className="nav-children ml-5 mt-1 space-y-1 border-l border-border pl-3">
+          {item.children.map((child, childIndex) => wrap(`nav-${index}-${childIndex}`, renderNavLink(child, true)))}
         </div>
       </details>
     );
   };
 
   return (
-    <div className="h-screen overflow-hidden flex bg-background text-text-primary">
+    <div className="dashboard-shell h-screen overflow-hidden flex bg-background text-text-primary">
+      {presentation.spatial && wrap("page-paint", <div className="absolute inset-0 bg-background" />)}
       {/* Sidebar */}
       <aside className="hidden md:flex w-72 flex-col fixed inset-y-0 border-r border-border bg-white z-10 transition-all">
-        <Link href={"/"} className="flex h-20 shrink-0 items-center px-6">
+        {presentation.spatial && wrap("sidebar-paint", <div className="absolute inset-0 border-r border-border bg-white" />)}
+        {wrap("brand", <Link href={"/"} className="flex h-20 shrink-0 items-center px-6">
           {user?.schoolLogoUrl && user.role !== "super_admin" ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -283,19 +289,19 @@ export default function DashboardLayout({
               className="mr-3"
             />
           )}
-        </Link>
+        </Link>)}
 
-        <div className="flex flex-1 flex-col overflow-y-auto">
+        <div className="sidebar-scroll flex flex-1 flex-col overflow-y-auto">
           <nav className="flex-1 space-y-1 px-4 py-6">
-            <div className="text-[11px] font-bold text-text-secondary/70 uppercase tracking-[0.16em] mb-3 px-3">
+            {wrap("role", <div className="text-[11px] font-bold text-text-secondary/70 uppercase tracking-[0.16em] mb-3 px-3">
               {role}
-            </div>
+            </div>)}
             {menuItems.map(renderNavItem)}
           </nav>
         </div>
 
-        <div className="space-y-3 border-t border-border p-4">
-          <div className="flex items-center gap-3 rounded-lg bg-background px-3 py-3">
+        <div className="sidebar-footer space-y-3 border-t border-border p-4">
+          {wrap("profile", <div className="flex items-center gap-3 rounded-lg bg-background px-3 py-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-white text-sm font-bold text-brand-indigo shadow-sm">
               {user?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -310,21 +316,21 @@ export default function DashboardLayout({
                 {role}
               </p>
             </div>
-          </div>
-          <button
+          </div>)}
+          {wrap("logout", <button
             onClick={() => logout()}
             className="group flex w-full items-center rounded-lg bg-brand-indigo/10 px-3 py-2.5 text-sm font-semibold text-brand-indigo transition-colors hover:bg-brand-indigo/15"
           >
             <LogOut className="mr-3 h-5 w-5" />
             Logout
-          </button>
+          </button>)}
         </div>
       </aside>
 
       {/* Main Content wrapper */}
-      <div className="flex min-w-0 flex-1 flex-col md:pl-72">
+      {wrap("workspace", <div className="dashboard-workspace flex min-w-0 flex-1 flex-col md:pl-72">
         {/* Top Navbar */}
-        <header className="z-10 flex h-20 flex-shrink-0 items-center gap-x-4 border-b border-border bg-white/95 px-4 backdrop-blur sm:gap-x-6 sm:px-6 lg:px-8">
+        {wrapWorkspacePart("header", <header className="z-10 flex h-20 flex-shrink-0 items-center gap-x-4 border-b border-border bg-white/95 px-4 backdrop-blur sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
             className="-m-2.5 p-2.5 text-text-secondary md:hidden"
@@ -378,7 +384,7 @@ export default function DashboardLayout({
               </div>
             </div>
           </div>
-        </header>
+        </header>)}
 
         {/* Main Content Area */}
         <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-10">
@@ -386,7 +392,7 @@ export default function DashboardLayout({
             {children}
           </div>
         </main>
-      </div>
+      </div>)}
     </div>
   );
 }

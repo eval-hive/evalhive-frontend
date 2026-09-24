@@ -1,0 +1,32 @@
+/* Keep the host's paint and spacing; unclip only spatial ancestors in this scene. */
+.school-analytics-scene .dashboard-shell {
+  position: relative; height: 1900px; overflow: visible;
+  background: transparent; transform-style: preserve-3d;
+}
+.school-analytics-scene aside {
+  display:flex; position:absolute; height:900px; background:transparent;
+  border:0; z-index:auto; transition:none; transform-style:preserve-3d;
+}
+.school-analytics-scene .sidebar-scroll,
+.school-analytics-scene nav,
+.school-analytics-scene details,
+.school-analytics-scene summary,
+.school-analytics-scene .nav-children,
+.school-analytics-scene .sidebar-footer,
+.school-analytics-scene .dashboard-workspace,
+.school-analytics-scene main,
+.school-analytics-scene main > div,
+.school-analytics-scene .analytics-stack,
+.school-analytics-scene .analytics-stack > div,
+.school-analytics-scene .analytics-wide {
+  overflow:visible; transform-style:preserve-3d;
+}
+.school-analytics-scene .dashboard-workspace { height:1900px; padding-left:288px; }
+.school-analytics-scene main > div { padding:32px; }
+.school-analytics-scene .analytics-stats { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.school-analytics-scene .analytics-chart-row { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.school-analytics-scene .analytics-bars { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.school-analytics-scene .analytics-wide { grid-column:span 2 / span 2; }
+.school-analytics-scene [data-flute-id="page-paint"] > [data-flute-content],
+.school-analytics-scene [data-flute-id="sidebar-paint"] > [data-flute-content] { height:100%; }
+.school-analytics-scene [data-flute-id^="stat-"] > [data-flute-content] > div { height:100%; }
