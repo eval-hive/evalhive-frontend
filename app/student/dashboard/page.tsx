@@ -1,153 +1,179 @@
-'use client';
+"use client";
 
-import { 
-  Monitor, 
-  History, 
-  BarChart,
-  PlayCircle,
-  Clock,
-  ArrowRight
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/DashboardLayout';
-import api from '@/lib/api';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { CalendarClock, Monitor } from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout";
+import api from "@/lib/api";
+import { attemptHeaders, saveAttemptSession } from "@/lib/attempt";
 
 const navItems = [
-  { name: 'My Exams', href: '/student/dashboard', icon: Monitor },
-  { name: 'JAMB Mock', href: '/student/mock/jamb', icon: PlayCircle },
-  { name: 'WAEC Mock', href: '/student/mock/waec', icon: PlayCircle },
-  { name: 'History & Results', href: '/student/history', icon: History },
-  { name: 'Mock Analytics', href: '/student/analytics', icon: BarChart },
+  { name: "My assessments", href: "/student/dashboard", icon: Monitor },
 ];
 
 export default function StudentDashboard() {
-  const [exams, setExams] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const router = useRouter();
-
+  const [assessments, setAssessments] = useState<any[]>([]);
+  const [message, setMessage] = useState("");
+  const [transfer, setTransfer] = useState<{
+    attemptId: string;
+    title: string;
+  } | null>(null);
+  const [busy, setBusy] = useState(false);
+  async function load() {
+    const response = await api.get("/attempts/assigned");
+    setAssessments(response.data.assessments);
+  }
   useEffect(() => {
-    const fetchExams = async () => {
-      try {
-        const res = await api.get('/student/exams');
-        setExams(res.data.exams);
-      } catch (err: any) {
-        const status = err.response?.status;
-        setError(status === 403
-          ? 'This page is available to student accounts only.'
-          : err.response?.data?.error || 'Could not load your exams. Please try again.'
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchExams();
+    load().catch(() => setMessage("Could not load your assigned assessments."));
   }, []);
-
+  function deviceLabel() {
+    return `${navigator.platform || "Browser"} · ${navigator.userAgent.slice(0, 80)}`;
+  }
+  async function openAssessment(assessment: any) {
+    setBusy(true);
+    setMessage("");
+    try {
+      const attemptId = assessment.attempt?.id;
+      const response = await api.post(
+        `/attempts/assessments/${assessment.id}/start`,
+        { deviceLabel: deviceLabel() },
+        { headers: attemptId ? attemptHeaders(attemptId) : {} },
+      );
+      const id = response.data.attempt.id;
+      saveAttemptSession(
+        id,
+        response.data.attemptSessionToken,
+        response.data.nextIntegritySequence,
+      );
+      router.push(`/student/exam/${id}`);
+    } catch (error: any) {
+      if (error.response?.data?.requiresTransfer)
+        setTransfer({
+          attemptId: error.response.data.attemptId,
+          title: assessment.title,
+        });
+      else
+        setMessage(
+          error.response?.data?.error || "Could not open this assessment.",
+        );
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function confirmTransfer() {
+    if (!transfer) return;
+    setBusy(true);
+    try {
+      const response = await api.post(
+        `/attempts/${transfer.attemptId}/transfer`,
+        { confirmTransfer: true, deviceLabel: deviceLabel() },
+      );
+      saveAttemptSession(
+        transfer.attemptId,
+        response.data.attemptSessionToken,
+        response.data.nextIntegritySequence,
+      );
+      router.push(`/student/exam/${transfer.attemptId}`);
+    } catch (error: any) {
+      setMessage(
+        error.response?.data?.error || "Could not transfer the attempt.",
+      );
+      setTransfer(null);
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
-    <DashboardLayout navItems={navItems} title="My Exams" role="Student">
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4">Active Exams</h2>
-        
-        {loading ? (
-          <div className="bg-card rounded-lg border border-border p-8 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-            <div className="animate-pulse h-6 w-32 bg-background-alt mx-auto rounded"></div>
-          </div>
-        ) : error ? (
-          <div className="bg-card rounded-lg border border-border p-12 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-            <Monitor className="mx-auto h-12 w-12 text-text-secondary/40" />
-            <h3 className="mt-4 text-sm font-medium text-text-primary">Unable to load exams</h3>
-            <p className="mt-1 text-sm text-text-secondary">{error}</p>
-          </div>
-        ) : exams.length === 0 ? (
-          <div className="bg-card rounded-lg border border-border p-12 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-            <Monitor className="mx-auto h-12 w-12 text-text-secondary/40" />
-            <h3 className="mt-4 text-sm font-medium text-text-primary">No exams available</h3>
-            <p className="mt-1 text-sm text-text-secondary">
-              There are no exams currently active for your class.
+    <DashboardLayout navItems={navItems} title="My assessments" role="Student">
+      <section>
+        <p className="text-sm font-semibold uppercase tracking-[.2em] text-brand-gold">
+          Eval Hive
+        </p>
+        <h1 className="mt-3 text-3xl font-bold text-text-primary">
+          Your assessments
+        </h1>
+        <p className="mt-2 text-text-secondary">
+          Assignments from all your cohorts and direct invitations appear once
+          here.
+        </p>
+        {message && (
+          <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-950">
+            {message}
+          </p>
+        )}
+        {transfer && (
+          <div className="mt-5 rounded-2xl border border-amber-300 bg-amber-50 p-5">
+            <h2 className="font-semibold text-amber-950">
+              Transfer active attempt?
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-amber-900">
+              {transfer.title} is open on another device. Transferring preserves
+              every saved answer and immediately prevents the previous device
+              from making changes.
             </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {exams.map((exam) => {
-              const hasInProgress = !!exam.inProgressAttemptId;
-              
-              return (
-                <div 
-                  key={exam.id} 
-                  className={`bg-card rounded-lg border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] transition-colors cursor-pointer group ${
-                    hasInProgress ? 'border-brand-indigo/50 bg-brand-indigo/5 hover:bg-brand-indigo/10' : 'border-border hover:border-brand-indigo/50'
-                  }`}
-                  onClick={() => router.push(hasInProgress ? `/student/exam/${exam.id}` : `/student/exam/${exam.id}`)}
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <span className="text-xs font-semibold px-2 py-1 bg-background-alt text-brand-indigo rounded-full">
-                        {exam.subject.name}
-                      </span>
-                      <h3 className="mt-3 text-lg font-medium text-text-primary group-hover:text-brand-indigo transition-colors">
-                        {exam.title}
-                      </h3>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center text-sm text-text-secondary mt-4">
-                    <Clock className="w-4 h-4 mr-2" />
-                    <span>{exam.durationMinutes} mins</span>
-                  </div>
-
-                  <div className="mt-6">
-                    <button className={`w-full py-2 px-4 rounded-lg font-medium flex items-center justify-center transition-colors ${
-                      hasInProgress 
-                        ? 'bg-brand-indigo text-white hover:bg-brand-indigo/90' 
-                        : 'bg-brand-indigo text-white hover:bg-brand-indigo/90'
-                    }`}>
-                      {hasInProgress ? 'Resume Exam' : 'Start Exam'}
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            <div className="mt-4 flex gap-3">
+              <button
+                disabled={busy}
+                onClick={confirmTransfer}
+                className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white"
+              >
+                Transfer to this device
+              </button>
+              <button
+                onClick={() => setTransfer(null)}
+                className="text-sm font-semibold text-slate-600"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
-      </div>
-
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center">
-          Practice Exams (Mock)
-        </h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
-          
-          <div
-            onClick={() => router.push('/student/mock/jamb')}
-            className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-brand-indigo/50 transition-colors cursor-pointer"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-medium text-text-primary">JAMB Mock</h3>
-                <p className="text-sm text-text-secondary mt-1">4 Subjects • Time limit: 2hrs</p>
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {assessments.map((assessment) => (
+            <article
+              key={assessment.id}
+              className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-text-primary">
+                    {assessment.title}
+                  </h2>
+                  <p className="mt-2 text-sm text-text-secondary">
+                    {assessment.itemCount} items ·{" "}
+                    {assessment.durationMinutes
+                      ? `${assessment.durationMinutes} minutes`
+                      : "No duration limit"}
+                  </p>
+                </div>
+                <CalendarClock className="h-5 w-5 text-brand-gold" />
               </div>
-              <PlayCircle className="h-6 w-6 text-text-secondary" />
+              <p className="mt-4 text-sm capitalize text-text-secondary">
+                {assessment.attempt
+                  ? `Attempt: ${assessment.attempt.status.replace("_", " ")} · grading ${assessment.attempt.gradingStatus.replace("_", " ")}`
+                  : assessment.availability}
+              </p>
+              {assessment.attempt?.resultPublishedAt ? (
+                <button onClick={() => router.push(`/student/result/${assessment.attempt.id}`)} className="mt-5 rounded-xl bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">View result</button>
+              ) : (
+                <button
+                  disabled={busy || (!assessment.attempt && assessment.availability !== "available") || (assessment.attempt && !["in_progress", "reopened"].includes(assessment.attempt.status))}
+                  onClick={() => openAssessment(assessment)}
+                  className="mt-5 rounded-xl bg-brand-indigo px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {["in_progress", "reopened"].includes(assessment.attempt?.status) ? "Resume assessment" : assessment.attempt ? "Awaiting published result" : "Start assessment"}
+                </button>
+              )}
+            </article>
+          ))}
+          {assessments.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-text-secondary">
+              No assessments are assigned to you yet.
             </div>
-          </div>
-
-          <div
-            onClick={() => router.push('/student/mock/waec')}
-            className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-brand-indigo/50 transition-colors cursor-pointer"
-          >
-             <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-medium text-text-primary">WAEC Mock</h3>
-                <p className="text-sm text-text-secondary mt-1">Single Subject • Select to start</p>
-              </div>
-              <PlayCircle className="h-6 w-6 text-text-secondary" />
-            </div>
-          </div>
-
+          )}
         </div>
-      </div>
+      </section>
     </DashboardLayout>
   );
 }

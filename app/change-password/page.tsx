@@ -1,17 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
-import { getUser, loginAuth } from '@/lib/auth';
+import { getUser, loginAuth, logout, refreshUser } from '@/lib/auth';
 
 export default function ChangePasswordPage() {
   const router = useRouter();
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [mustChangePassword, setMustChangePassword] = useState(getUser()?.mustChangePassword ?? false);
+
+  useEffect(() => {
+    refreshUser()
+      .then((user) => setMustChangePassword(user.mustChangePassword))
+      .catch(() => undefined);
+  }, []);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,8 +30,8 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (newPassword.length < 10) {
+      setError('Password must be at least 10 characters');
       return;
     }
 
@@ -31,6 +39,7 @@ export default function ChangePasswordPage() {
 
     try {
       await api.post('/auth/change-password', {
+        currentPassword,
         newPassword,
         confirmPassword,
       });
@@ -39,25 +48,17 @@ export default function ChangePasswordPage() {
       const user = getUser();
       if (user) {
         user.mustChangePassword = false;
-        // Need token to recreate login state
-        const token = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('token='))
-          ?.split('=')[1];
-          
-        if (token) {
-          loginAuth(token, user);
-        }
+        loginAuth(user);
 
         // Redirect based on role
         switch (user.role) {
           case 'super_admin':
             router.push('/admin/platform');
             break;
-          case 'school_admin':
-            router.push('/admin/school');
+          case 'organization_admin':
+            router.push('/admin/organization');
             break;
-          case 'teacher':
+          case 'tutor':
             router.push('/teacher/dashboard');
             break;
           case 'student':
@@ -100,6 +101,28 @@ export default function ChangePasswordPage() {
 
         <form className="mt-8 space-y-6" onSubmit={handleChangePassword}>
           <div className="space-y-4">
+            {!mustChangePassword && <div>
+              <label htmlFor="current-password" className="block text-sm font-medium text-text-primary mb-1">
+                Current Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-text-secondary" />
+                </div>
+                <input
+                  id="current-password"
+                  name="current-password"
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-brand-gold focus:border-brand-gold sm:text-sm bg-background"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>}
             <div>
               <label htmlFor="new-password" className="block text-sm font-medium text-text-primary mb-1">
                 New Password
@@ -117,6 +140,7 @@ export default function ChangePasswordPage() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-brand-gold focus:border-brand-gold sm:text-sm bg-background"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   disabled={isLoading}
                 />
               </div>
@@ -139,6 +163,7 @@ export default function ChangePasswordPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-brand-gold focus:border-brand-gold sm:text-sm bg-background"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   disabled={isLoading}
                 />
               </div>
@@ -162,6 +187,9 @@ export default function ChangePasswordPage() {
             </button>
           </div>
         </form>
+        <button type="button" onClick={logout} disabled={isLoading} className="mt-6 w-full text-sm text-text-secondary hover:text-brand-indigo">
+          Sign out and return to login
+        </button>
       </div>
     </div>
   );

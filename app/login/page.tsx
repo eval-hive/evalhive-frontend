@@ -1,244 +1,117 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Lock, Mail, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
-import api from '@/lib/api';
-import { loginAuth } from '@/lib/auth';
-import { getSchoolSlugClient } from '@/lib/tenant';
+import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Hexagon, LockKeyhole, Mail } from "lucide-react";
+import api from "@/lib/api";
+import { loginAuth, User } from "@/lib/auth";
+import { getOrganizationSlugClient } from "@/lib/tenant";
+
+function dashboardFor(user: User) {
+  if (user.mustChangePassword) return "/change-password";
+  if (user.role === "super_admin") return "/admin/platform";
+  if (user.role === "organization_admin") return "/admin/organization";
+  if (user.role === "tutor") return "/teacher/dashboard";
+  return "/student/dashboard";
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [schoolData, setSchoolData] = useState<any>(null);
-  const [isSchoolLoading, setIsSchoolLoading] = useState(true);
-  const [schoolError, setSchoolError] = useState<string | null>(null);
   const [slug, setSlug] = useState<string | null>(null);
+  const [tenantReady, setTenantReady] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [organization, setOrganization] = useState<{ name: string; slug: string; logoUrl?: string | null } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const tenantQuery = slug ? `?organization=${encodeURIComponent(slug)}` : "";
 
   useEffect(() => {
-    const currentSlug = getSchoolSlugClient();
-    setSlug(currentSlug);
-
-    if (currentSlug) {
-      api.get(`/schools/resolve/${currentSlug}`)
-        .then(res => {
-          setSchoolData(res.data.school);
-          if (res.data.school && !res.data.school.isActive) {
-            const inactiveMessage = res.data.school.subscriptionStatus === 'pending_approval'
-              ? "This school's registration is still awaiting Eval Hive approval."
-              : "This school's account is currently suspended. Contact Eval Hive support.";
-            setSchoolError(inactiveMessage);
-          }
-        })
-        .catch(() => {
-          setSchoolError('School not found. Check your link or contact Eval Hive support.');
-        })
-        .finally(() => {
-          setIsSchoolLoading(false);
-        });
-    } else {
-      setIsSchoolLoading(false);
-    }
+    setSlug(getOrganizationSlugClient());
+    setTenantReady(true);
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
-    try {
-      const response = await api.post('/auth/login', {
-        email: identifier,
-        password,
-        school_slug: slug,
-      });
-
-      const { token, user } = response.data;
-      loginAuth(token, user);
-
-      if (user.mustChangePassword) {
-        router.push('/change-password');
-      } else {
-        switch (user.role) {
-          case 'super_admin':
-            router.push('/admin/platform');
-            break;
-          case 'school_admin':
-            router.push('/admin/school');
-            break;
-          case 'teacher':
-            router.push('/teacher/dashboard');
-            break;
-          case 'student':
-            router.push('/student/dashboard');
-            break;
-        }
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid credentials or connection issue');
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (!tenantReady) return;
+    if (slug) {
+      api.get(`/organizations/resolve/${slug}${tenantQuery}`)
+        .then((response) => setOrganization(response.data.organization))
+        .catch(() => setError("This organization workspace is unavailable."));
     }
-  };
+    api.get(`/auth/me${tenantQuery}`)
+      .then((response) => {
+        loginAuth(response.data.user);
+        router.replace(dashboardFor(response.data.user));
+      })
+      .catch(() => {});
+  }, [router, slug, tenantQuery, tenantReady]);
 
-  if (isSchoolLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="animate-spin h-8 w-8 text-brand-indigo" />
-      </div>
-    );
-  }
-
-  if (schoolError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="max-w-md w-full bg-card p-10 rounded-lg shadow-xl shadow-brand-indigo/10 border border-border text-center">
-          <AlertCircle className="h-12 w-12 text-brand-red mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-text-primary mb-2">Access Error</h2>
-          <p className="text-text-secondary">{schoolError}</p>
-        </div>
-      </div>
-    );
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const response = await api.post(`/auth/login${tenantQuery}`, { email, password });
+      loginAuth(response.data.user);
+      router.push(dashboardFor(response.data.user));
+    } catch (requestError: any) {
+      setError(requestError.response?.data?.error || "Unable to sign in right now.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto grid min-h-[calc(100vh-5rem)] w-full max-w-6xl overflow-hidden rounded-lg border border-border bg-card shadow-2xl shadow-brand-indigo/10 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="relative hidden bg-brand-indigo p-10 text-white lg:flex lg:flex-col lg:justify-between">
+    <main className="min-h-screen bg-[#f5f7fb] px-5 py-10 text-slate-950">
+      <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-2xl shadow-slate-200/70 lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
+          <div className="flex items-center gap-3 text-lg font-semibold"><Hexagon className="h-7 w-7 text-amber-400" /> Eval Hive</div>
           <div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-gold text-sm font-black text-brand-indigo">
-                EH
-              </div>
-              <div>
-                <p className="text-xl font-bold tracking-tight">Eval Hive</p>
-                <p className="text-xs font-medium text-white/60">School CBT Suite</p>
-              </div>
-            </div>
-            <div className="mt-24 max-w-md">
-              <p className="text-sm font-bold uppercase tracking-[0.18em] text-brand-gold">Secure assessment platform</p>
-              <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight">
-                Professional CBT management system for modern secondary schools.
-              </h1>
-              <p className="mt-5 text-base leading-7 text-white/70">
-                Manage exams, mock practice, question banks, student attempts, and results from one polished school portal.
-              </p>
-            </div>
+            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-amber-400">Independent assessment</p>
+            <h1 className="max-w-lg text-5xl font-semibold leading-tight">Assess clearly. Grade thoughtfully. Keep every learner in view.</h1>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">A focused assessment workspace for tutors, bootcamps, summer schools, and online education teams.</p>
           </div>
-          <div className="grid grid-cols-3 gap-3 text-sm">
-            {['Question Banks', 'Mock Exams', 'Result Analytics'].map((item) => (
-              <div key={item} className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white/80">
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
+          <p className="text-sm text-slate-400">Each organization has an isolated workspace and independent accounts.</p>
+        </section>
 
-        <div className="flex items-center justify-center p-6 sm:p-10">
-          <div className="w-full max-w-md">
-            <div>
-              {schoolData?.logoUrl ? (
-                <div className="mb-6 flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-border bg-white p-2 shadow-sm">
-                  <img src={schoolData.logoUrl} alt={schoolData.name} className="h-full w-full object-contain" />
-                </div>
-              ) : (
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-brand-indigo/10 text-brand-indigo">
-                  <ShieldCheck className="h-6 w-6" />
-                </div>
-              )}
-              <h2 className="text-3xl font-bold text-text-primary tracking-tight">
-                {schoolData ? schoolData.name : 'Eval Hive'}
-              </h2>
-              <p className="mt-2 text-sm text-text-secondary">
-                {slug ? 'Sign in to your school account' : 'Sign in to Platform Admin'}
-              </p>
+        <section className="flex items-center p-7 sm:p-12">
+          <div className="mx-auto w-full max-w-md">
+            <div className="mb-9">
+              {organization?.logoUrl ? <img src={organization.logoUrl} alt="" className="mb-5 h-14 w-14 rounded-2xl object-contain" /> : null}
+              <p className="text-sm font-semibold text-amber-700">{organization?.name || "Eval Hive platform"}</p>
+              <h2 className="mt-2 text-3xl font-semibold">Welcome back</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">Sign in with the email and password for this workspace.</p>
             </div>
 
-            {error && (
-              <div className="mt-6 bg-brand-red/10 border border-brand-red/20 p-4 rounded-lg flex items-start">
-                <AlertCircle className="h-5 w-5 text-brand-red mr-3 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-brand-red">{error}</p>
-              </div>
-            )}
-
-            <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="identifier" className="block text-sm font-semibold text-text-primary mb-1">
-                    Email or Admission Number
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-text-secondary" />
-                    </div>
-                    <input
-                      id="identifier"
-                      name="identifier"
-                      type="text"
-                      required
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-border rounded-lg placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo sm:text-sm bg-background text-text-primary"
-                      placeholder="admin@school.edu.ng or STD001"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="block text-sm font-semibold text-text-primary mb-1">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-text-secondary" />
-                    </div>
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-border rounded-lg placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo sm:text-sm bg-background text-text-primary"
-                      placeholder="Password"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-brand-indigo hover:bg-brand-indigo/95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-indigo transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-brand-indigo/20"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign in'
-                )}
+            <form onSubmit={submit} className="space-y-5">
+              <label className="block text-sm font-medium text-slate-700">
+                Email
+                <span className="mt-2 flex items-center rounded-xl border border-slate-200 bg-white px-3 focus-within:border-slate-500">
+                  <Mail className="h-4 w-4 text-slate-400" />
+                  <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} className="w-full border-0 bg-transparent px-3 py-3 outline-none" autoComplete="email" />
+                </span>
+              </label>
+              <label className="block text-sm font-medium text-slate-700">
+                Password
+                <span className="mt-2 flex items-center rounded-xl border border-slate-200 bg-white px-3 focus-within:border-slate-500">
+                  <LockKeyhole className="h-4 w-4 text-slate-400" />
+                  <input type="password" required value={password} onChange={(event) => setPassword(event.target.value)} className="w-full border-0 bg-transparent px-3 py-3 outline-none" autoComplete="current-password" />
+                </span>
+              </label>
+              {error ? <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
+              <button disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60">
+                {loading ? "Signing in…" : "Sign in"}<ArrowRight className="h-4 w-4" />
               </button>
             </form>
 
-            {!slug && (
-              <p className="mt-6 text-center text-sm text-text-secondary">
-                Registering a school?{' '}
-                <Link href="/register" className="font-semibold text-brand-indigo hover:text-brand-indigo/80">
-                  Create a school account
-                </Link>
-              </p>
-            )}
+            <div className="mt-6 flex items-center justify-between text-sm">
+              <Link href={`/forgot-password${tenantQuery}`} className="font-medium text-slate-700 hover:text-slate-950">Forgot password?</Link>
+              {!slug ? <Link href="/register" className="font-medium text-amber-700 hover:text-amber-800">Create an organization</Link> : null}
+            </div>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

@@ -1,91 +1,15 @@
-'use client';
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { BarChart3, BookOpen, CheckCircle, Clock, FileText, GraduationCap, Users } from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout";
+import api from "@/lib/api";
 
-import { 
-  BookOpen, 
-  FileText, 
-  CheckCircle,
-  Clock
-} from 'lucide-react';
-import Link from 'next/link';
-import DashboardLayout from '@/components/DashboardLayout';
-
-const navItems = [
-  { name: 'My Dashboard', href: '/teacher/dashboard', icon: BookOpen },
-  { name: 'My Exams', href: '/teacher/exams', icon: FileText },
-  { name: 'My Classes', href: '/teacher/classes', icon: UsersIcon },
-  { name: 'Results', href: '/teacher/results', icon: CheckCircle },
-];
-
-function UsersIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  )
-}
+const navItems = [{ name: "My Dashboard", href: "/teacher/dashboard", icon: BookOpen }, { name: "Authoring", href: "/teacher/authoring", icon: FileText }, { name: "Grading", href: "/teacher/grading", icon: GraduationCap }, { name: "Results", href: "/teacher/results", icon: BarChart3 }, { name: "Integrity", href: "/teacher/integrity", icon: Clock }];
 
 export default function TeacherDashboard() {
-  return (
-    <DashboardLayout navItems={navItems} title="Teacher Dashboard" role="Subject Teacher">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-8">
-        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-          <div className="flex items-center">
-            <div className="p-3 rounded-md bg-brand-indigo/10">
-              <FileText className="h-6 w-6 text-brand-indigo" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-text-secondary">Draft Exams</p>
-              <p className="text-2xl font-bold text-text-primary">0</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-          <div className="flex items-center">
-            <div className="p-3 rounded-md bg-brand-gold/10">
-              <Clock className="h-6 w-6 text-brand-gold" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-text-secondary">Pending Approval</p>
-              <p className="text-2xl font-bold text-text-primary">0</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-card rounded-lg border border-border p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-          <div className="flex items-center">
-            <div className="p-3 rounded-md bg-brand-emerald/10">
-              <CheckCircle className="h-6 w-6 text-brand-emerald" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-text-secondary">Approved Exams</p>
-              <p className="text-2xl font-bold text-text-primary">0</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <h2 className="text-lg font-semibold text-text-primary mb-4">Quick Actions</h2>
-      <div className="bg-card rounded-lg border border-border p-8 text-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-        <p className="text-text-secondary mb-6">You haven't created any exams yet.</p>
-        <Link href="/teacher/exams/create" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-[0_1px_2px_rgba(17,24,39,0.04)] text-white bg-brand-indigo hover:bg-brand-indigo/90 focus:outline-none">
-          Create New Exam
-        </Link>
-      </div>
-    </DashboardLayout>
-  );
+  const [data, setData] = useState<any>(null); const [error, setError] = useState("");
+  useEffect(() => { api.get("/analytics/dashboard").then((response) => setData(response.data.dashboard)).catch((requestError) => setError(requestError.response?.data?.error || "Could not load dashboard analytics.")); }, []);
+  const cards = data ? [["Assessments", data.assessments, FileText], ["Completed attempts", data.completedAttempts, CheckCircle], ["Pending grading", data.pendingGrading, Clock], ["Average performance", data.averagePerformance === null ? "—" : `${data.averagePerformance}%`, BarChart3]] : [];
+  return <DashboardLayout navItems={navItems} title="Tutor dashboard" role="Subject Teacher"><div><div className="flex flex-wrap items-end justify-between gap-4"><div><h1 className="text-3xl font-bold">Assessment overview</h1><p className="mt-2 text-text-secondary">Live activity for assessments you own.</p></div><Link href="/teacher/results" className="rounded-lg bg-brand-indigo px-4 py-2.5 text-sm font-semibold text-white">Open results</Link></div>{error && <p className="mt-5 rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}</p>}<div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map(([label, value, Icon]: any) => <div key={label} className="rounded-xl border border-border bg-card p-5"><div className="flex items-center justify-between"><p className="text-sm text-text-secondary">{label}</p><Icon className="h-5 w-5 text-brand-indigo"/></div><p className="mt-3 text-3xl font-bold">{value}</p></div>)}</div><section className="mt-7 rounded-xl border border-border bg-card p-6"><h2 className="text-lg font-semibold">Recent assessments</h2><div className="mt-4 divide-y divide-border">{data?.recentAssessments?.map((assessment: any) => <Link key={assessment.id} href={`/teacher/results/${assessment.id}`} className="flex items-center justify-between py-4"><span><span className="block font-semibold">{assessment.title}</span><span className="text-sm capitalize text-text-secondary">{assessment.status}</span></span><span className="text-sm font-semibold text-brand-indigo">{assessment._count.attempts} attempts →</span></Link>)}{data && !data.recentAssessments.length && <p className="py-5 text-text-secondary">No assessments yet.</p>}</div></section><div className="mt-7 grid gap-4 md:grid-cols-3"><Link href="/teacher/authoring" className="rounded-xl border border-border bg-card p-5"><FileText className="h-5 w-5 text-brand-indigo"/><p className="mt-3 font-semibold">Build an assessment</p></Link><Link href="/teacher/grading" className="rounded-xl border border-border bg-card p-5"><GraduationCap className="h-5 w-5 text-brand-gold"/><p className="mt-3 font-semibold">Review grading queue</p></Link><Link href="/teacher/results" className="rounded-xl border border-border bg-card p-5"><Users className="h-5 w-5 text-emerald-700"/><p className="mt-3 font-semibold">Cohort and learner performance</p></Link></div></div></DashboardLayout>;
 }

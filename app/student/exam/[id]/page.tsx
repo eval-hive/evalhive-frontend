@@ -1,424 +1,51 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Flag, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, Loader2, Clock } from 'lucide-react';
-import api from '@/lib/api';
-import MathText from '@/components/MathText';
+import { useEffect, useRef, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Flag, Loader2, Trash2, Upload } from "lucide-react";
+import api from "@/lib/api";
+import MathText from "@/components/MathText";
+import { attemptHeaders, integrityQueueKey, nextIntegritySequence, saveAttemptSession } from "@/lib/attempt";
 
-function resolveQuestionImageUrl(imageUrl: string) {
-  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
-  return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${imageUrl}`;
-}
+type Item = { id: string; type: string; prompt: string; maximumPoints: string; options?: { id: string; text: string }[]; response?: any };
 
-export default function ExamTakingInterface() {
-  const router = useRouter();
-  const params = useParams();
-  const examId = params.id as string;
-  
-  const [attempt, setAttempt] = useState<any>(null);
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<Record<string, { option: string | null, flagged: boolean }>>({});
-  
-  const [loading, setLoading] = useState(true);
-  const [savingStatus, setSavingStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [submitting, setSubmitting] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  // Poll timer
-  useEffect(() => {
-    if (timeRemaining === null || timeRemaining <= 0 || submitting) return;
-    
-    const interval = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev && prev <= 1) {
-          clearInterval(interval);
-          handleAutoSubmit();
-          return 0;
-        }
-        return prev ? prev - 1 : 0;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timeRemaining, submitting]);
-
-  // Load Exam
-  useEffect(() => {
-    const initExam = async () => {
-      try {
-        let attemptRes;
-        
-        // Mock routes create an attempt before sending the student here, while
-        // internal exams still arrive with an exam id. Resume first, then start.
-        try {
-          attemptRes = await api.get(`/student/attempts/${examId}/resume`);
-        } catch {
-          try {
-            attemptRes = await api.post(`/student/exams/${examId}/start`);
-          } catch (err: any) {
-            if (err.response?.data?.error === 'Attempt already exists for this exam') {
-              const examsRes = await api.get('/student/exams');
-              const targetExam = examsRes.data.exams.find((e: any) => e.id === examId);
-              if (targetExam?.inProgressAttemptId) {
-                attemptRes = await api.get(`/student/attempts/${targetExam.inProgressAttemptId}/resume`);
-              } else {
-                throw err;
-              }
-            } else {
-              throw err;
-            }
-          }
-        }
-        
-        const data = attemptRes.data;
-        if (data.attempt) {
-          // resumed
-          setAttempt(data.attempt);
-          setQuestions(data.questions);
-          setTimeRemaining(data.timeRemaining);
-          
-          const restoredAnswers: Record<string, { option: string | null, flagged: boolean }> = {};
-          if (data.attempt.studentAnswers) {
-            data.attempt.studentAnswers.forEach((ans: any) => {
-              restoredAnswers[ans.questionId] = {
-                option: ans.selectedOption,
-                flagged: ans.isFlagged
-              };
-            });
-          }
-          setAnswers(restoredAnswers);
-        } else {
-          // fresh start
-          setAttempt({ id: data.attemptId });
-          setQuestions(data.questions);
-          setTimeRemaining(data.durationMinutes * 60);
-          
-          const initialAnswers: Record<string, { option: string | null, flagged: boolean }> = {};
-          data.questions.forEach((q: any) => {
-            initialAnswers[q.id] = { option: null, flagged: false };
-          });
-          setAnswers(initialAnswers);
-        }
-      } catch {
-        router.push('/student/dashboard');
-      } finally {
-        setLoading(false);
-      }
-    };
-    initExam();
-  }, [examId, router]);
-
-  const handleSelectOption = async (option: string) => {
-    if (!attempt || !questions[currentIdx]) return;
-    const qId = questions[currentIdx].id;
-    
-    setSavingStatus('saving');
-    
-    // Toggle if same option clicked
-    const currentAns = answers[qId];
-    const isSelected = currentAns?.option === option;
-    const newOption = isSelected ? null : option;
-    
-    const newAnswerState = { ...currentAns, option: newOption };
-    setAnswers(prev => ({ ...prev, [qId]: newAnswerState }));
-    
+export default function AssessmentAttemptPage() {
+  const { id } = useParams<{ id: string }>(); const router = useRouter(); const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const [attempt, setAttempt] = useState<any>(null); const [current, setCurrent] = useState(0); const [remaining, setRemaining] = useState<number | null>(null); const [saveState, setSaveState] = useState("idle"); const [message, setMessage] = useState(""); const [warning, setWarning] = useState(""); const [submitting, setSubmitting] = useState(false); const [needsTransfer, setNeedsTransfer] = useState(false);
+  function updateItem(itemId: string, patch: any) { setAttempt((value: any) => ({ ...value, items: value.items.map((item: Item) => item.id === itemId ? { ...item, response: { ...(item.response || {}), ...patch } } : item) })); }
+  async function load() { try { const response = await api.get(`/attempts/${id}`, { headers: attemptHeaders(id) }); setAttempt(response.data.attempt); setRemaining(response.data.attempt.remainingSeconds); flushIntegrity(); } catch (error: any) { if (error.response?.data?.code === "ATTEMPT_SESSION_REVOKED") setNeedsTransfer(true); else setMessage(error.response?.data?.error || "Could not resume this attempt."); } }
+  async function transfer() { try { const response = await api.post(`/attempts/${id}/transfer`, { confirmTransfer: true, deviceLabel: `${navigator.platform} · ${navigator.userAgent.slice(0, 80)}` }); saveAttemptSession(id, response.data.attemptSessionToken, response.data.nextIntegritySequence); setNeedsTransfer(false); await load(); } catch (error: any) { setMessage(error.response?.data?.error || "Could not transfer the attempt."); } }
+  async function save(item: Item, body: any) { setSaveState("saving"); try { const response = await api.put(`/attempts/${id}/items/${item.id}/response`, body, { headers: attemptHeaders(id) }); updateItem(item.id, response.data.response); setSaveState("saved"); setTimeout(() => setSaveState("idle"), 1500); } catch (error: any) { setSaveState("error"); if (error.response?.data?.code === "ATTEMPT_SESSION_REVOKED") setNeedsTransfer(true); if (error.response?.data?.timedOut) await submit(); } }
+  async function uploadFiles(item: Item, selected: FileList | null) {
+    const files = [...(selected || [])];
+    if (!files.length) return;
+    const existing = item.response?.files || [];
+    if (existing.length + files.length > 5) return setMessage("You can attach no more than five files to one response.");
+    if (files.some((file) => file.size > 3 * 1024 * 1024)) return setMessage("Each file must be 3 MB or smaller.");
+    const allowed = new Set(["pdf", "docx", "txt", "csv", "md", "json", "js", "jsx", "ts", "tsx", "py", "java", "c", "h", "cpp", "hpp", "cs", "go", "rs", "rb", "sql"]);
+    if (files.some((file) => !allowed.has(file.name.split(".").pop()?.toLowerCase() || ""))) return setMessage("That file type is not allowed. Upload a supported document or source-code file.");
+    const form = new FormData(); files.forEach((file) => form.append("files", file));
+    setSaveState("saving"); setMessage("");
     try {
-      await api.post(`/student/attempts/${attempt.id}/answer`, {
-        questionId: qId,
-        selectedOption: newOption,
-        isFlagged: newAnswerState.flagged
-      });
-      setSavingStatus('saved');
-      setTimeout(() => setSavingStatus('idle'), 2000);
-    } catch {
-      setSavingStatus('error');
-    }
-  };
-
-  const handleToggleFlag = async () => {
-    if (!attempt || !questions[currentIdx]) return;
-    const qId = questions[currentIdx].id;
-    
-    setSavingStatus('saving');
-    const currentAns = answers[qId] || { option: null, flagged: false };
-    const newAnswerState = { ...currentAns, flagged: !currentAns.flagged };
-    
-    setAnswers(prev => ({ ...prev, [qId]: newAnswerState }));
-    
-    try {
-      await api.post(`/student/attempts/${attempt.id}/answer`, {
-        questionId: qId,
-        selectedOption: newAnswerState.option,
-        isFlagged: newAnswerState.flagged
-      });
-      setSavingStatus('saved');
-      setTimeout(() => setSavingStatus('idle'), 2000);
-    } catch (err) {
-      setSavingStatus('error');
-    }
-  };
-
-  const handleAutoSubmit = async () => {
-    if (submitting || !attempt) return;
-    setSubmitting(true);
-    try {
-      await api.post(`/student/attempts/${attempt.id}/submit`);
-    } catch (err) {} 
-    router.push(`/student/result/${attempt.id}`);
-  };
-
-  const handleManualSubmit = async () => {
-    setSubmitting(true);
-    setShowConfirmModal(false);
-    try {
-      await api.post(`/student/attempts/${attempt.id}/submit`);
-      router.push(`/student/result/${attempt.id}`);
-    } catch (err) {
-      setSubmitting(false);
-    }
-  };
-
-  if (loading) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">
-      <Loader2 className="w-10 h-10 animate-spin text-brand-indigo" />
-    </div>;
+      const result = await api.post(`/submissions/attempts/${id}/items/${item.id}/files`, form, { headers: { ...attemptHeaders(id), "Content-Type": "multipart/form-data" } });
+      updateItem(item.id, { files: result.data.files, fileMetadata: result.data.files }); setSaveState("saved"); setTimeout(() => setSaveState("idle"), 1500);
+    } catch (error: any) { setSaveState("error"); setMessage(error.response?.data?.error || "The file upload failed."); if (error.response?.data?.code === "ATTEMPT_SESSION_REVOKED") setNeedsTransfer(true); }
   }
-
-  if (submitting) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-brand-indigo mb-4" />
-        <h2 className="text-xl font-semibold text-text-primary">Submitting Exam...</h2>
-        <p className="text-text-secondary mt-2">Please wait, compiling your results.</p>
-      </div>
-    );
+  async function removeFile(item: Item, fileId: string) {
+    setSaveState("saving"); setMessage("");
+    try { const result = await api.delete(`/submissions/attempts/${id}/items/${item.id}/files/${fileId}`, { headers: attemptHeaders(id) }); updateItem(item.id, { files: result.data.files, fileMetadata: result.data.files }); setSaveState("saved"); }
+    catch (error: any) { setSaveState("error"); setMessage(error.response?.data?.error || "The file could not be removed."); }
   }
-
-  const currentQ = questions[currentIdx];
-  const qId = currentQ?.id;
-  const currentAns = answers[qId];
-
-  const answeredCount = Object.values(answers).filter(a => a.option !== null).length;
-  const flaggedCount = Object.values(answers).filter(a => a.flagged).length;
-  
-  const m = timeRemaining ? Math.floor(timeRemaining / 60) : 0;
-  const s = timeRemaining ? timeRemaining % 60 : 0;
-  const isWarning = timeRemaining !== null && timeRemaining <= 300;
-
-  return (
-    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background">
-      {/* Top Bar */}
-      <header className="z-10 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] sm:px-6">
-        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-          <h1 className="text-lg font-semibold text-text-primary hidden sm:block">Exam Session</h1>
-          <span className="text-sm px-3 py-1 bg-background-alt text-text-secondary rounded-full">
-            {answeredCount} / {questions.length} answered
-          </span>
-          <div className="text-sm">
-            {savingStatus === 'saving' && <span className="text-brand-indigo flex items-center"><Loader2 className="w-3 h-3 animate-spin mr-1"/> Saving...</span>}
-            {savingStatus === 'saved' && <span className="text-green-500 flex items-center"><CheckCircle className="w-3 h-3 mr-1"/> Saved</span>}
-            {savingStatus === 'error' && <span className="text-red-500">Save failed</span>}
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2 sm:gap-6">
-          <div className={`flex items-center font-mono text-xl font-medium px-4 py-1.5 rounded-lg border ${
-            isWarning ? 'bg-red-500/10 text-red-600 border-red-500/20 animate-pulse' : 'bg-background-alt text-brand-indigo border-transparent'
-          }`}>
-            <Clock className="w-5 h-5 mr-2" />
-            {m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}
-          </div>
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            className="cursor-pointer rounded-lg bg-brand-indigo px-4 py-2 font-medium text-white shadow-[0_1px_2px_rgba(17,24,39,0.04)] transition-colors hover:bg-brand-indigo/90 sm:px-6"
-          >
-            Submit
-          </button>
-        </div>
-      </header>
-
-      {/* Warning Banner */}
-      {isWarning && (
-        <div className="flex shrink-0 items-center justify-center border-b border-red-500/20 bg-red-500/10 px-4 py-2 text-red-600 sm:px-6">
-          <AlertTriangle className="w-4 h-4 mr-2" />
-          <span className="text-sm font-medium">5 minutes remaining. Your exam will auto-submit when time runs out.</span>
-        </div>
-      )}
-
-      {/* Main Layout */}
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        
-        {/* Left Side: Question Navigator */}
-        <aside className="hidden min-h-0 w-80 shrink-0 flex-col border-r border-border bg-background-alt lg:flex">
-          <div className="p-4 border-b border-border">
-            <h3 className="font-semibold text-text-primary">Questions Map</h3>
-          </div>
-          <div className="p-4 overflow-y-auto flex-1">
-            <div className="grid grid-cols-5 gap-2">
-              {questions.map((q, idx) => {
-                const ans = answers[q.id];
-                const isAnswered = ans && ans.option !== null;
-                const isFlagged = ans && ans.flagged;
-                const isActive = currentIdx === idx;
-
-                let btnClass = "h-10 text-sm cursor-pointer font-medium rounded border transition-colors relative flex items-center justify-center ";
-                
-                if (isActive) btnClass += "ring-2 bg-foreground ring-brand-indigo ring-offset-2 text-white ring-offset-background ";
-                
-                if (isAnswered) {
-                  btnClass += "bg-brand-indigo text-white border-brand-indigo ";
-                } else {
-                  btnClass += "bg-card text-text-primary border-border hover:bg-background ";
-                }
-
-                if (isFlagged) {
-                   btnClass += "border-y-4 border-brand-gold ";
-                }
-
-                return (
-                  <button 
-                    key={q.id} 
-                    onClick={() => setCurrentIdx(idx)}
-                    className={btnClass}
-                  >
-                    {idx + 1}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div className="p-4 border-t border-border flex flex-wrap gap-4 text-xs text-text-secondary">
-             <div className="flex items-center"><div className="w-3 h-3 bg-card border border-border rounded mr-2"></div> Unanswered</div>
-             <div className="flex items-center"><div className="w-3 h-3 bg-brand-indigo rounded mr-2"></div> Answered</div>
-             <div className="flex items-center"><div className="w-3 h-3 border-y-2 border-brand-gold bg-card rounded mr-2"></div> Flagged</div>
-          </div>
-        </aside>
-
-        {/* Right Side: Question Area */}
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col bg-card">
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className="mx-auto max-w-4xl p-5 sm:p-6 md:px-10 md:py-8">
-            {currentQ && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row">
-                  <h2 className="min-w-0 flex-1 text-xl font-medium leading-snug text-text-primary md:text-2xl">
-                    <span className="text-brand-indigo font-bold mr-3">{currentIdx + 1}.</span>
-                    <MathText>{currentQ.questionText}</MathText>
-                  </h2>
-                  <button 
-                    onClick={handleToggleFlag}
-                    className={`flex shrink-0 items-center rounded-md border px-3 py-1.5 text-sm transition-colors sm:ml-4 ${
-                      currentAns?.flagged 
-                        ? 'border-brand-gold bg-brand-gold/10 text-brand-gold font-medium' 
-                        : 'border-border bg-background hover:bg-background-alt text-text-secondary'
-                    }`}
-                  >
-                    <Flag className={`w-4 h-4 mr-2 ${currentAns?.flagged ? 'fill-current' : ''}`} />
-                    {currentAns?.flagged ? 'Flagged' : 'Flag for review'}
-                  </button>
-                </div>
-
-                {currentQ.imageUrl && (
-                  <div className="mb-6 max-w-lg overflow-hidden rounded-lg border border-border">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={resolveQuestionImageUrl(currentQ.imageUrl)} alt="Question figure" className="w-full h-auto object-cover" />
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  {['a', 'b', 'c', 'd', 'e'].map(optKey => {
-                    const optText = currentQ[`option${optKey.toUpperCase()}`];
-                    if (!optText) return null;
-                    
-                    const isSelected = currentAns?.option === optKey;
-
-                    return (
-                      <button
-                        key={optKey}
-                        onClick={() => handleSelectOption(optKey)}
-                        className={`group flex min-h-16 w-full items-center rounded-lg border-2 p-4 text-left transition-all ${
-                          isSelected 
-                            ? 'border-brand-indigo bg-brand-indigo/5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]' 
-                            : 'border-border bg-background hover:border-brand-indigo/40 hover:bg-background-alt'
-                        }`}
-                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold mr-4 shrink-0 transition-colors ${
-                          isSelected ? 'bg-brand-indigo text-white' : 'bg-background-alt text-text-secondary group-hover:text-brand-indigo'
-                        }`}>
-                          {optKey.toUpperCase()}
-                        </div>
-                        <span className={`min-w-0 break-words text-base leading-6 md:text-lg ${isSelected ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
-                          <MathText>{optText}</MathText>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            </div>
-          </div>
-
-          {/* Bottom Navigation Bar */}
-          <div className="z-10 flex shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-4 py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] sm:px-6">
-            <button 
-              onClick={() => setCurrentIdx(Math.max(0, currentIdx - 1))}
-              disabled={currentIdx === 0}
-              className="px-5 py-2.5 rounded-lg font-medium flex items-center transition-colors text-text-primary bg-background-alt hover:bg-border disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-5 h-5 mr-1" />
-              Previous
-            </button>
-            <div className="hidden font-medium text-text-secondary sm:block">
-              Question {currentIdx + 1} of {questions.length}
-            </div>
-            {currentIdx === questions.length - 1 ? (
-              <button 
-                onClick={() => setShowConfirmModal(true)}
-                className="px-6 py-2.5 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
-              >
-                Submit Exam
-              </button>
-            ) : (
-               <button 
-                onClick={() => setCurrentIdx(Math.min(questions.length - 1, currentIdx + 1))}
-                className="px-5 py-2.5 bg-brand-indigo text-white font-medium rounded-lg hover:bg-brand-indigo/90 transition-colors flex items-center shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
-              >
-                Next Question
-                <ChevronRight className="w-5 h-5 ml-1" />
-              </button>
-            )}
-          </div>
-        </main>
-      </div>
-
-      {/* Submit Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-           <div className="bg-card rounded-lg w-full max-w-md p-8 shadow-xl animate-in zoom-in-95 duration-200">
-             <div className="w-12 h-12 bg-brand-indigo/10 rounded-full flex items-center justify-center mb-6">
-                <CheckCircle className="w-6 h-6 text-brand-indigo" />
-             </div>
-             <h3 className="text-xl font-bold text-text-primary mb-2">Submit Exam</h3>
-             <p className="text-text-secondary mb-6 leading-relaxed">
-               You have answered <strong className="text-text-primary">{answeredCount} of {questions.length}</strong> questions.
-               {flaggedCount > 0 && <span> <strong className="text-brand-gold">{flaggedCount}</strong> are flagged for review. </span>}
-               Are you sure you want to completely submit your exam?
-             </p>
-             <div className="flex gap-4 w-full">
-               <button className="flex-1 py-3 bg-background-alt hover:bg-border text-text-primary rounded-lg font-medium transition-colors" onClick={() => setShowConfirmModal(false)}>
-                 Go Back
-               </button>
-               <button className="flex-1 py-3 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-lg font-medium transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]" onClick={handleManualSubmit}>
-                 Submit Now
-               </button>
-             </div>
-           </div>
-        </div>
-      )}
-
-    </div>
-  );
+  function scheduleSave(item: Item, body: any) { clearTimeout(timers.current[item.id]); timers.current[item.id] = setTimeout(() => save(item, body), 650); }
+  function queueIntegrity(type: "page_hidden" | "page_visible" | "page_leave") { const key = integrityQueueKey(id); const queue = JSON.parse(localStorage.getItem(key) || "[]"); queue.push({ type, sequence: nextIntegritySequence(id), clientOccurredAt: new Date().toISOString() }); localStorage.setItem(key, JSON.stringify(queue.slice(-100))); if (navigator.onLine) flushIntegrity(); }
+  async function flushIntegrity() { const key = integrityQueueKey(id); const queue = JSON.parse(localStorage.getItem(key) || "[]"); if (!queue.length || !localStorage.getItem(`eval_hive_attempt_token:${id}`)) return; try { const response = await api.post(`/attempts/${id}/integrity-events`, { events: queue }, { headers: attemptHeaders(id) }); const sent = new Set(queue.map((event: any) => event.sequence)); const currentQueue = JSON.parse(localStorage.getItem(key) || "[]").filter((event: any) => !sent.has(event.sequence)); localStorage.setItem(key, JSON.stringify(currentQueue)); if (response.data.warning) setWarning(response.data.integrityFlagged ? "This attempt has been flagged for tutor review. You may continue and submit normally." : `You have reached the leave-warning threshold (${response.data.leaveCount}/${response.data.graceLimit}).`); } catch { /* Retain the queue for online replay. */ } }
+  async function submit() { if (submitting) return; setSubmitting(true); try { await api.post(`/attempts/${id}/submit`, {}, { headers: attemptHeaders(id) }); localStorage.removeItem(integrityQueueKey(id)); router.push("/student/dashboard"); } catch (error: any) { setMessage(error.response?.data?.error || "Submission failed. Your saved work is still available."); setSubmitting(false); } }
+  useEffect(() => { load(); return () => Object.values(timers.current).forEach(clearTimeout); }, [id]);
+  useEffect(() => { const visibility = () => queueIntegrity(document.hidden ? "page_hidden" : "page_visible"); const leave = () => queueIntegrity("page_leave"); const online = () => flushIntegrity(); document.addEventListener("visibilitychange", visibility); window.addEventListener("pagehide", leave); window.addEventListener("online", online); return () => { document.removeEventListener("visibilitychange", visibility); window.removeEventListener("pagehide", leave); window.removeEventListener("online", online); }; }, [id]);
+  useEffect(() => { if (remaining === null || remaining <= 0 || submitting) return; const timer = setInterval(() => setRemaining((value) => value === null ? null : Math.max(0, value - 1)), 1000); return () => clearInterval(timer); }, [remaining === null, submitting]);
+  useEffect(() => { if (remaining === 0 && ["in_progress", "reopened"].includes(attempt?.status)) submit(); }, [remaining]);
+  if (needsTransfer) return <main className="flex min-h-screen items-center justify-center bg-[#f5f7fb] p-6"><div className="max-w-lg rounded-2xl border border-amber-300 bg-white p-8"><AlertTriangle className="h-8 w-8 text-amber-600"/><h1 className="mt-4 text-2xl font-semibold">This attempt is controlled by another device</h1><p className="mt-3 leading-7 text-slate-600">Transfer only if you intend to continue here. Saved answers are preserved and the previous device will immediately lose write access.</p><button onClick={transfer} className="mt-6 rounded-xl bg-amber-700 px-5 py-3 font-semibold text-white">Transfer to this device</button></div></main>;
+  if (!attempt) return <main className="flex min-h-screen items-center justify-center bg-[#f5f7fb]"><div className="text-center">{!message && <Loader2 className="mx-auto h-9 w-9 animate-spin text-indigo-700"/>}<p className="mt-4 text-slate-600">{message || "Resuming your assessment…"}</p>{message && <button onClick={() => router.push("/student/dashboard")} className="mt-4 font-semibold text-indigo-700">Back to assessments</button>}</div></main>;
+  const item: Item = attempt.items[current]; const response = item.response || {}; const minutes = remaining === null ? null : Math.floor(remaining / 60); const seconds = remaining === null ? null : remaining % 60;
+  return <main className="flex min-h-screen flex-col bg-[#f5f7fb] text-slate-950"><header className="sticky top-0 z-10 border-b border-slate-200 bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4"><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-amber-700">Assessment in progress</p><h1 className="font-semibold">{attempt.title}</h1></div><div className="flex items-center gap-3"><span className="text-sm text-slate-500">{saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved" : saveState === "error" ? "Save failed" : ""}</span>{remaining !== null && <span className={`flex items-center gap-2 rounded-xl px-3 py-2 font-mono font-semibold ${remaining <= 300 ? "bg-rose-50 text-rose-700" : "bg-slate-100"}`}><Clock className="h-4 w-4"/>{minutes}:{String(seconds).padStart(2, "0")}</span>}<button disabled={submitting} onClick={submit} className="rounded-xl bg-indigo-700 px-4 py-2 font-semibold text-white">Submit</button></div></div></header>{warning && <div className="border-b border-amber-300 bg-amber-50 px-5 py-3 text-center text-sm font-medium text-amber-950">{warning}</div>}{message && <div className="border-b border-rose-200 bg-rose-50 px-5 py-3 text-center text-sm text-rose-800">{message}</div>}<div className="mx-auto grid w-full max-w-7xl flex-1 gap-6 px-5 py-6 lg:grid-cols-[240px_1fr]"><aside className="rounded-2xl border border-slate-200 bg-white p-4"><p className="text-sm font-semibold">Item map</p><div className="mt-3 grid grid-cols-5 gap-2">{attempt.items.map((candidate: Item, index: number) => <button key={candidate.id} onClick={() => setCurrent(index)} className={`h-9 rounded-lg text-sm font-semibold ${index === current ? "bg-indigo-700 text-white" : candidate.response ? "bg-emerald-100 text-emerald-900" : "bg-slate-100"}`}>{index + 1}</button>)}</div></aside><section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-9"><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-semibold uppercase text-amber-700">{item.type.replaceAll("_", " ")} · {item.maximumPoints} marks</p><div className="mt-4 text-lg leading-8"><MathText>{item.prompt}</MathText></div></div><button onClick={() => save(item, { ...response, isFlagged: !response.isFlagged })} className={`rounded-xl border p-2 ${response.isFlagged ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-500"}`} aria-label="Flag item"><Flag className="h-5 w-5"/></button></div><div className="mt-8">{item.type === "multiple_choice" && <div className="space-y-3">{item.options?.map((option) => <label key={option.id} className={`flex cursor-pointer gap-3 rounded-xl border p-4 ${response.selectedOptionId === option.id ? "border-indigo-500 bg-indigo-50" : "border-slate-200"}`}><input type="radio" checked={response.selectedOptionId === option.id} onChange={() => save(item, { selectedOptionId: option.id, isFlagged: Boolean(response.isFlagged) })}/><MathText>{option.text}</MathText></label>)}</div>}{item.type === "written_answer" && <textarea value={response.writtenText || ""} onChange={(event) => { const patch = { writtenText: event.target.value, isFlagged: Boolean(response.isFlagged) }; updateItem(item.id, patch); scheduleSave(item, patch); }} onBlur={() => save(item, { writtenText: response.writtenText || "", isFlagged: Boolean(response.isFlagged) })} rows={10} placeholder="Write your answer…" className="w-full rounded-xl border border-slate-300 p-4 leading-7"/>}{item.type === "url_submission" && <input type="url" value={response.submittedUrl || ""} onChange={(event) => { const patch = { submittedUrl: event.target.value, isFlagged: Boolean(response.isFlagged) }; updateItem(item.id, patch); scheduleSave(item, patch); }} onBlur={() => save(item, { submittedUrl: response.submittedUrl || "", isFlagged: Boolean(response.isFlagged) })} placeholder="https://…" className="w-full rounded-xl border border-slate-300 p-4"/>}{item.type === "file_submission" && <div className="rounded-xl border border-dashed border-slate-300 p-6"><label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-700 px-4 py-2 font-semibold text-white"><Upload className="h-4 w-4"/>Upload files<input type="file" multiple className="sr-only" onChange={(event) => { uploadFiles(item, event.target.files); event.currentTarget.value = ""; }}/></label><p className="mt-3 text-xs leading-5 text-slate-500">Up to five approved document or source-code files, maximum 3 MB each. Files are stored privately and downloaded as attachments.</p><p className="mt-2 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-900"><AlertTriangle className="mr-1 inline h-4 w-4"/>Student-submitted code can be unsafe. Tutors should inspect or run it only in a sandbox.</p><div className="mt-4 space-y-2">{(response.files || []).map((file: any) => <div key={file.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-3 text-sm"><span className="flex min-w-0 items-center gap-2"><CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600"/><span className="truncate">{file.name}</span><span className="shrink-0 text-xs text-slate-500">{Math.ceil(file.sizeBytes / 1024)} KB</span></span><button onClick={() => removeFile(item, file.id)} className="rounded-md p-1 text-rose-700" aria-label={`Remove ${file.name}`}><Trash2 className="h-4 w-4"/></button></div>)}{!(response.files || []).length && <p className="text-sm text-slate-500">No files uploaded yet.</p>}</div></div>}</div><div className="mt-10 flex items-center justify-between"><button disabled={current === 0} onClick={() => setCurrent((value) => value - 1)} className="flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 font-semibold disabled:opacity-40"><ChevronLeft className="h-4 w-4"/>Previous</button><span className="text-sm text-slate-500">{current + 1} of {attempt.items.length}</span><button disabled={current === attempt.items.length - 1} onClick={() => setCurrent((value) => value + 1)} className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 font-semibold text-white disabled:opacity-40">Next<ChevronRight className="h-4 w-4"/></button></div></section></div></main>;
 }

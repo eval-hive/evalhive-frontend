@@ -2,7 +2,7 @@
 
 import { Surface } from '@webprodigies/flute';
 import type { ReactNode } from 'react';
-import SchoolAdminDashboard from '../../../app/admin/school/page';
+import OrganizationAdminDashboard from '../../../app/admin/organization/page';
 import { DashboardPresentation } from '../../../components/DashboardPresentation';
 import { AnalyticsPresentation } from '../../../components/AnalyticsPresentation';
 import { SceneMetric, SceneChartProgress, wrapAnalytics } from '../AnalyticsMotion';
@@ -11,7 +11,7 @@ import '../analytics-reveal.css';
 const dashboardPresentation = {
   spatial: true,
   splitWorkspace: true,
-  activePath: '/admin/school',
+  activePath: '/admin/organization',
   wrap(id: string, children: ReactNode) {
     return <Surface key={id} id={id} style={id.endsWith('-paint')
       ? { position: 'absolute', inset: 0, pointerEvents: 'none' }
@@ -23,8 +23,8 @@ const analyticsPresentation = {wrap: wrapAnalytics, Metric: SceneMetric, Progres
 export default function AnalyticsReveal() {
   return <DashboardPresentation.Provider value={dashboardPresentation}>
     <AnalyticsPresentation.Provider value={analyticsPresentation}>
-      <Surface id="dashboard" className="school-analytics-scene" style={{position:'absolute',left:0,top:-450,width:1600,height:1900}}>
-        <SchoolAdminDashboard />
+      <Surface id="dashboard" className="school-analytics-scene" style={{position:'absolute',left:160,top:-410,width:1600,height:1900}}>
+        <OrganizationAdminDashboard />
       </Surface>
     </AnalyticsPresentation.Provider>
   </DashboardPresentation.Provider>;

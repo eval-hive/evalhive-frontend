@@ -1,0 +1,30 @@
+/* Scene-only layout support; host colours, typography and controls are unchanged. */
+.exam-cinema { position:absolute !important; left:160px; top:40px; width:1600px; height:1000px; }
+.exam-cinema > [data-flute-content] { position:absolute; inset:0; }
+.exam-backing { position:absolute; inset:0; background:var(--card); }
+.exam-sidebar-backing { position:absolute; left:0; top:101px; bottom:0; width:320px; background:var(--background-alt); border-right:1px solid var(--border); }
+.exam-cinema .exam-session-view { height:1000px; background:transparent; }
+.exam-cinema .exam-session-view,
+.exam-cinema .exam-session-view > div,
+.exam-cinema aside,
+.exam-cinema aside > div,
+.exam-cinema main,
+.exam-cinema main > div,
+.exam-cinema main > div > div,
+.exam-cinema main > div > div > div,
+.exam-cinema main .space-y-3,
+.exam-cinema .grid { overflow:visible; transform-style:preserve-3d; }
+.exam-cinema aside { display:flex; background:transparent; border:0; }
+.exam-cinema main { background:transparent; }
+.exam-cinema .animate-in, .exam-cinema .animate-pulse { animation:none !important; }
+.exam-cinema button { transition:none; }
+.exam-layer-exam-header, .exam-layer-exam-warning, .exam-layer-map-title, .exam-layer-map-legend, .exam-layer-exam-navigation { flex-shrink:0; }
+.exam-layer[class*="exam-layer-number-"] button { width:100%; }
+.exam-layer-question-heading { background:var(--card); }
+.exam-layer-exam-confirmation { position:absolute !important; inset:0; pointer-events:none; }
+.exam-layer-exam-confirmation > [data-flute-content] { position:absolute; inset:0; }
+.exam-result-layer { position:absolute !important; left:320px; top:135px; width:1280px; pointer-events:none; }
+.exam-result-layer > [data-flute-content] { background:var(--card); }
+.exam-pointer { position:absolute !important; left:0; top:0; width:32px; height:40px; pointer-events:none; }
+.exam-click { position:absolute !important; left:-20px; top:-20px; width:40px; height:40px; pointer-events:none; }
+.exam-click > [data-flute-content] > div { width:40px; height:40px; border:3px solid var(--color-brand-indigo); border-radius:50%; background:color-mix(in srgb, var(--color-brand-indigo) 12%, transparent); }

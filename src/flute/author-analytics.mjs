@@ -40,5 +40,5 @@ if (!review.valid) throw new Error('Analytics scene validation failed.');
 writeFileSync(new URL('./scenes/analytics-reveal.scene.json',import.meta.url),JSON.stringify({
   version:1,id:'analytics-reveal',title:'Analytics / In Motion',
   description:'A close oblique journey from live summary cards into animated trends, score distributions and school performance. Cards lift, fade and settle as values count up.',
-  definition:{scene,motion,width:1600,height:1000},
+  definition:{scene,motion,width:1920,height:1080},
 },null,2)+'\n');

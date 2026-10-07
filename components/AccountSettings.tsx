@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Camera, CheckCircle2, KeyRound, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
-import { getAuthToken, getUser, loginAuth } from '@/lib/auth';
+import { getUser, loginAuth } from '@/lib/auth';
 
 export default function AccountSettings() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -32,9 +32,8 @@ export default function AccountSettings() {
       const response = await api.post('/auth/avatar', body, { headers: { 'Content-Type': 'multipart/form-data' } });
       setAvatarUrl(response.data.user.avatarUrl);
       const currentUser = getUser();
-      const token = getAuthToken();
-      if (currentUser && token) {
-        loginAuth(token, { ...currentUser, avatarUrl: response.data.user.avatarUrl });
+      if (currentUser) {
+        loginAuth({ ...currentUser, avatarUrl: response.data.user.avatarUrl });
         window.dispatchEvent(new Event('auth-updated'));
       }
       setMessage('Profile picture updated.');
@@ -81,7 +80,7 @@ export default function AccountSettings() {
       </section>
 
       <section className="rounded-lg border border-border bg-card p-6">
-        <div className="flex items-start gap-3"><span className="rounded-lg bg-brand-indigo/10 p-2 text-brand-indigo"><KeyRound className="h-5 w-5" /></span><div><h2 className="text-lg font-semibold text-text-primary">Change password</h2><p className="mt-1 text-sm text-text-secondary">Use at least six characters and keep this password private.</p></div></div>
+        <div className="flex items-start gap-3"><span className="rounded-lg bg-brand-indigo/10 p-2 text-brand-indigo"><KeyRound className="h-5 w-5" /></span><div><h2 className="text-lg font-semibold text-text-primary">Change password</h2><p className="mt-1 text-sm text-text-secondary">Use at least ten characters and keep this password private.</p></div></div>
         <form onSubmit={changePassword} className="mt-6 grid max-w-3xl grid-cols-1 gap-4 md:grid-cols-3">
           <PasswordField label="Current password" value={passwords.currentPassword} onChange={(value) => setPasswords((current) => ({ ...current, currentPassword: value }))} />
           <PasswordField label="New password" value={passwords.newPassword} onChange={(value) => setPasswords((current) => ({ ...current, newPassword: value }))} />

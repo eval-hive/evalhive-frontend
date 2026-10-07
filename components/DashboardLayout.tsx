@@ -8,7 +8,6 @@ import {
   Bell,
   BookOpen,
   Building,
-  CalendarDays,
   ChevronDown,
   FileSpreadsheet,
   FileText,
@@ -18,7 +17,6 @@ import {
   Menu,
   Monitor,
   Moon,
-  PlayCircle,
   Search,
   Settings,
   UploadCloud,
@@ -46,53 +44,28 @@ interface DashboardLayoutProps {
 }
 
 const roleNavItems: Record<string, NavItem[]> = {
-  "school admin": [
+  "organization administrator": [
     {
-      name: "School Dashboard",
-      href: "/admin/school",
+      name: "Organization home",
+      href: "/admin/organization",
       icon: Building,
       exact: true,
     },
     {
-      name: "Academics",
-      href: "/admin/school/subjects",
-      icon: BookOpen,
-      children: [
-        { name: "Subjects", href: "/admin/school/subjects", icon: BookOpen },
-        { name: "Academic Sessions", href: "/admin/school/sessions", icon: CalendarDays },
-        { name: "Teachers", href: "/admin/school/teachers", icon: Users },
-        {
-          name: "Students",
-          href: "/admin/school/students",
-          icon: GraduationCap,
-        },
-      ],
+      name: "People",
+      href: "/admin/organization/people",
+      icon: Users,
     },
     {
-      name: "Exams",
-      href: "/admin/school/exams",
+      name: "Cohorts",
+      href: "/admin/organization/cohorts",
       icon: FileSpreadsheet,
-      children: [
-        {
-          name: "All Exams",
-          href: "/admin/school/exams",
-          icon: FileSpreadsheet,
-          exact: true,
-        },
-        {
-          name: "Create Exam",
-          href: "/admin/school/exams/create",
-          icon: FileText,
-        },
-        {
-          name: "Import Questions",
-          href: "/admin/school/import",
-          icon: UploadCloud,
-        },
-      ],
     },
-    { name: "Results", href: "/admin/school/results", icon: BarChart3 },
-    { name: "Settings", href: "/admin/school/settings", icon: Settings },
+    { name: "Authoring", href: "/teacher/authoring", icon: FileText },
+    { name: "Settings", href: "/admin/organization/settings", icon: Settings },
+    { name: "Grading", href: "/teacher/grading", icon: GraduationCap },
+    { name: "Results", href: "/teacher/results", icon: BarChart3 },
+    { name: "Integrity", href: "/teacher/integrity", icon: Bell },
   ],
   "super administrator": [
     {
@@ -101,7 +74,7 @@ const roleNavItems: Record<string, NavItem[]> = {
       icon: BarChart3,
       exact: true,
     },
-    { name: "Schools", href: "/admin/platform/schools", icon: Building },
+    { name: "Organizations", href: "/admin/platform/organizations", icon: Building },
     { name: "Settings", href: "/admin/platform/settings", icon: Settings },
   ],
   student: [
@@ -111,17 +84,7 @@ const roleNavItems: Record<string, NavItem[]> = {
       icon: Monitor,
       exact: true,
     },
-    {
-      name: "Mock Exams",
-      href: "/student/mock",
-      icon: PlayCircle,
-      children: [
-        { name: "JAMB Mock", href: "/student/mock/jamb", icon: PlayCircle },
-        { name: "WAEC Mock", href: "/student/mock/waec", icon: PlayCircle },
-        { name: "Mock Analytics", href: "/student/analytics", icon: BarChart3 },
-      ],
-    },
-    { name: "History & Results", href: "/student/history", icon: History },
+    { name: "Result history", href: "/student/history", icon: History },
   ],
   teacher: [
     {
@@ -130,44 +93,17 @@ const roleNavItems: Record<string, NavItem[]> = {
       icon: BookOpen,
       exact: true,
     },
-    {
-      name: "Exams",
-      href: "/teacher/exams",
-      icon: FileText,
-      children: [
-        {
-          name: "My Exams",
-          href: "/teacher/exams",
-          icon: FileText,
-          exact: true,
-        },
-        {
-          name: "Create Exam",
-          href: "/teacher/exams/create",
-          icon: FileSpreadsheet,
-        },
-      ],
-    },
-    {
-      name: "Classes",
-      href: "/teacher/classes",
-      icon: Users,
-      children: [
-        {
-          name: "My Classes",
-          href: "/teacher/classes",
-          icon: Users,
-          exact: true,
-        },
-        { name: "Class Overview", href: "/teacher/class", icon: GraduationCap },
-      ],
-    },
+    { name: "Authoring", href: "/teacher/authoring", icon: FileText },
+    { name: "Grading", href: "/teacher/grading", icon: GraduationCap },
+    { name: "Results", href: "/teacher/results", icon: BarChart3 },
+    { name: "Integrity", href: "/teacher/integrity", icon: Bell },
   ],
 };
 
 const getRoleNavItems = (role: string, fallback: NavItem[]) => {
   const normalized = role.toLowerCase();
-  if (normalized.includes("school admin")) return roleNavItems["school admin"];
+  if (normalized.includes("organization admin"))
+    return roleNavItems["organization administrator"];
   if (normalized.includes("super")) return roleNavItems["super administrator"];
   if (normalized.includes("student")) return roleNavItems.student;
   if (normalized.includes("teacher")) return roleNavItems.teacher;
@@ -193,27 +129,34 @@ export default function DashboardLayout({
     return () => window.removeEventListener("auth-updated", refreshAuth);
   }, []);
   React.useEffect(() => {
-    if (!user?.schoolId || user.schoolLogoUrl) return;
-    api.get("/auth/me").then((response) => {
-      setUser((current) => current ? {
-        ...current,
-        schoolLogoUrl: response.data.user.school?.logoUrl || null,
-        schoolName: response.data.user.school?.name || null,
-      } : current);
-    }).catch(() => undefined);
-  }, [user?.schoolId, user?.schoolLogoUrl]);
+    if (!user?.organizationId || user.organization?.logoUrl) return;
+    api
+      .get("/auth/me")
+      .then((response) => {
+        setUser((current) =>
+          current
+            ? {
+                ...current,
+                organization: response.data.user.organization || current.organization,
+              }
+            : current,
+        );
+      })
+      .catch(() => undefined);
+  }, [user?.organizationId, user?.organization?.logoUrl]);
   const routePath = usePathname();
   const presentation = React.useContext(DashboardPresentation);
   const { wrap } = presentation;
-  const wrapWorkspacePart = (id: string, content: React.ReactNode) => presentation.splitWorkspace ? wrap(id, content) : content;
+  const wrapWorkspacePart = (id: string, content: React.ReactNode) =>
+    presentation.splitWorkspace ? wrap(id, content) : content;
   const pathname = presentation.activePath || routePath;
   const menuItems = getRoleNavItems(role, navItems);
   const displayName = user?.displayName || role;
   const initial = displayName.charAt(0).toUpperCase();
   const settingsHref = role.toLowerCase().includes("super")
     ? "/admin/platform/settings"
-    : role.toLowerCase().includes("school admin")
-      ? "/admin/school/settings"
+    : role.toLowerCase().includes("organization admin")
+      ? "/admin/organization/settings"
       : null;
 
   const renderNavLink = (item: NavItem, nested = false) => {
@@ -241,7 +184,8 @@ export default function DashboardLayout({
   };
 
   const renderNavItem = (item: NavItem, index: number) => {
-    if (!item.children?.length) return wrap(`nav-${index}`, renderNavLink(item));
+    if (!item.children?.length)
+      return wrap(`nav-${index}`, renderNavLink(item));
 
     const isActive =
       item.children.some((child) => isPathActive(pathname, child)) ||
@@ -249,18 +193,39 @@ export default function DashboardLayout({
     const summaryClass = `flex cursor-pointer list-none items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-all
       [&::-webkit-details-marker]:hidden
       ${isActive ? "bg-brand-indigo/10 text-brand-indigo" : "text-text-secondary hover:bg-background-alt hover:text-text-primary"}`;
-    const summaryContent = <>
-      <item.icon className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive ? "text-brand-indigo" : "text-text-secondary group-hover/nav:text-text-primary"}`} />
-      <span className="flex-1">{item.name}</span>
-      <ChevronDown className="h-4 w-4 text-text-secondary transition-transform group-open/nav:rotate-180" />
-    </>;
+    const summaryContent = (
+      <>
+        <item.icon
+          className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive ? "text-brand-indigo" : "text-text-secondary group-hover/nav:text-text-primary"}`}
+        />
+        <span className="flex-1">{item.name}</span>
+        <ChevronDown className="h-4 w-4 text-text-secondary transition-transform group-open/nav:rotate-180" />
+      </>
+    );
     return (
-      <details key={item.name} open={isActive || presentation.spatial} className="group/nav">
-        <summary className={presentation.spatial ? "list-none [&::-webkit-details-marker]:hidden" : summaryClass}>
-          {presentation.spatial ? wrap(`nav-${index}`, <div className={summaryClass}>{summaryContent}</div>) : summaryContent}
+      <details
+        key={item.name}
+        open={isActive || presentation.spatial}
+        className="group/nav"
+      >
+        <summary
+          className={
+            presentation.spatial
+              ? "list-none [&::-webkit-details-marker]:hidden"
+              : summaryClass
+          }
+        >
+          {presentation.spatial
+            ? wrap(
+                `nav-${index}`,
+                <div className={summaryClass}>{summaryContent}</div>,
+              )
+            : summaryContent}
         </summary>
         <div className="nav-children ml-5 mt-1 space-y-1 border-l border-border pl-3">
-          {item.children.map((child, childIndex) => wrap(`nav-${index}-${childIndex}`, renderNavLink(child, true)))}
+          {item.children.map((child, childIndex) =>
+            wrap(`nav-${index}-${childIndex}`, renderNavLink(child, true)),
+          )}
         </div>
       </details>
     );
@@ -268,131 +233,168 @@ export default function DashboardLayout({
 
   return (
     <div className="dashboard-shell h-screen overflow-hidden flex bg-background text-text-primary">
-      {presentation.spatial && wrap("page-paint", <div className="absolute inset-0 bg-background" />)}
+      {presentation.spatial &&
+        wrap("page-paint", <div className="absolute inset-0 bg-background" />)}
       {/* Sidebar */}
       <aside className="hidden md:flex w-72 flex-col fixed inset-y-0 border-r border-border bg-white z-10 transition-all">
-        {presentation.spatial && wrap("sidebar-paint", <div className="absolute inset-0 border-r border-border bg-white" />)}
-        {wrap("brand", <Link href={"/"} className="flex h-20 shrink-0 items-center px-6">
-          {user?.schoolLogoUrl && user.role !== "super_admin" ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.schoolLogoUrl}
-              alt={`${user.schoolName || "School"} logo`}
-              className="h-12 w-44 object-contain object-left"
-            />
-          ) : (
-            <Image
-              src="/images/logo.png"
-              alt="EvalHive Logo"
-              width={130}
-              height={32}
-              className="mr-3"
-            />
+        {presentation.spatial &&
+          wrap(
+            "sidebar-paint",
+            <div className="absolute inset-0 border-r border-border bg-white" />,
           )}
-        </Link>)}
+        {wrap(
+          "brand",
+          <Link href={"/"} className="flex h-20 shrink-0 items-center px-6">
+            {user?.organization?.logoUrl && user.role !== "super_admin" ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.organization.logoUrl}
+                alt={`${user.organization.name || "Organization"} logo`}
+                className="h-12 w-44 object-contain object-left"
+              />
+            ) : (
+              <Image
+                src="/images/logo.png"
+                alt="EvalHive Logo"
+                width={130}
+                height={32}
+                className="mr-3"
+              />
+            )}
+          </Link>,
+        )}
 
         <div className="sidebar-scroll flex flex-1 flex-col overflow-y-auto">
           <nav className="flex-1 space-y-1 px-4 py-6">
-            {wrap("role", <div className="text-[11px] font-bold text-text-secondary/70 uppercase tracking-[0.16em] mb-3 px-3">
-              {role}
-            </div>)}
+            {wrap(
+              "role",
+              <div className="text-[11px] font-bold text-text-secondary/70 uppercase tracking-[0.16em] mb-3 px-3">
+                {role}
+              </div>,
+            )}
             {menuItems.map(renderNavItem)}
           </nav>
         </div>
 
         <div className="sidebar-footer space-y-3 border-t border-border p-4">
-          {wrap("profile", <div className="flex items-center gap-3 rounded-lg bg-background px-3 py-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-white text-sm font-bold text-brand-indigo shadow-sm">
-              {user?.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.avatarUrl} alt="Profile" className="h-full w-full rounded-full object-cover" />
-              ) : initial}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-text-primary">
-                {displayName}
-              </p>
-              <p className="truncate text-xs font-semibold uppercase tracking-wide text-text-secondary">
-                {role}
-              </p>
-            </div>
-          </div>)}
-          {wrap("logout", <button
-            onClick={() => logout()}
-            className="group flex w-full items-center rounded-lg bg-brand-indigo/10 px-3 py-2.5 text-sm font-semibold text-brand-indigo transition-colors hover:bg-brand-indigo/15"
-          >
-            <LogOut className="mr-3 h-5 w-5" />
-            Logout
-          </button>)}
+          {wrap(
+            "profile",
+            <div className="flex items-center gap-3 rounded-lg bg-background px-3 py-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-white text-sm font-bold text-brand-indigo shadow-sm">
+                {user?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.avatarUrl}
+                    alt="Profile"
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                ) : (
+                  initial
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-text-primary">
+                  {displayName}
+                </p>
+                <p className="truncate text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                  {role}
+                </p>
+              </div>
+            </div>,
+          )}
+          {wrap(
+            "logout",
+            <button
+              onClick={() => logout()}
+              className="group flex w-full items-center rounded-lg bg-brand-indigo/10 px-3 py-2.5 text-sm font-semibold text-brand-indigo transition-colors hover:bg-brand-indigo/15"
+            >
+              <LogOut className="mr-3 h-5 w-5" />
+              Logout
+            </button>,
+          )}
         </div>
       </aside>
 
       {/* Main Content wrapper */}
-      {wrap("workspace", <div className="dashboard-workspace flex min-w-0 flex-1 flex-col md:pl-72">
-        {/* Top Navbar */}
-        {wrapWorkspacePart("header", <header className="z-10 flex h-20 flex-shrink-0 items-center gap-x-4 border-b border-border bg-white/95 px-4 backdrop-blur sm:gap-x-6 sm:px-6 lg:px-8">
-          <button
-            type="button"
-            className="-m-2.5 p-2.5 text-text-secondary md:hidden"
-          >
-            <span className="sr-only">Open sidebar</span>
-            <Menu className="h-6 w-6" aria-hidden="true" />
-          </button>
-
-          {/* Separator */}
-          <div className="h-6 w-px bg-border md:hidden" />
-
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 justify-between items-center">
-            <div>
-              <p className="hidden text-sm font-semibold text-text-secondary sm:block">
-                Dashboard <span className="mx-1 text-border">/</span>{" "}
-                <span className="text-text-primary">{title}</span>
-              </p>
-            </div>
-            <div className="flex items-center gap-x-2 sm:gap-x-3 lg:gap-x-4 ml-auto">
+      {wrap(
+        "workspace",
+        <div className="dashboard-workspace flex min-w-0 flex-1 flex-col md:pl-72">
+          {/* Top Navbar */}
+          {wrapWorkspacePart(
+            "header",
+            <header className="z-10 flex h-20 flex-shrink-0 items-center gap-x-4 border-b border-border bg-white/95 px-4 backdrop-blur sm:gap-x-6 sm:px-6 lg:px-8">
               <button
                 type="button"
-                className="rounded-lg p-2.5 text-text-secondary transition-colors hover:bg-background-alt hover:text-text-primary"
+                className="-m-2.5 p-2.5 text-text-secondary md:hidden"
               >
-                <span className="sr-only">View notifications</span>
-                <Bell className="h-5 w-5" aria-hidden="true" />
+                <span className="sr-only">Open sidebar</span>
+                <Menu className="h-6 w-6" aria-hidden="true" />
               </button>
 
-              {settingsHref ? <Link
-                href={settingsHref}
-                className="hidden rounded-lg p-2.5 text-text-secondary transition-colors hover:bg-background-alt hover:text-text-primary sm:inline-flex"
-              >
-                <span className="sr-only">Settings</span>
-                <Settings className="h-5 w-5" aria-hidden="true" />
-              </Link> : null}
+              {/* Separator */}
+              <div className="h-6 w-px bg-border md:hidden" />
 
-              <div className="hidden lg:block lg:h-8 lg:w-px lg:bg-border" />
-
-              <div className="flex items-center gap-x-3 pl-1">
-                <span className="sr-only">Your profile</span>
-                <div className="hidden text-right lg:block">
-                  <p className="max-w-56 truncate text-sm font-bold text-text-primary">
-                    {displayName}
+              <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 justify-between items-center">
+                <div>
+                  <p className="hidden text-sm font-semibold text-text-secondary sm:block">
+                    Dashboard <span className="mx-1 text-border">/</span>{" "}
+                    <span className="text-text-primary">{title}</span>
                   </p>
                 </div>
-                <div className="h-11 w-11 rounded-full border border-border bg-white flex items-center justify-center text-brand-indigo font-bold shadow-sm">
-                  {user?.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={user.avatarUrl} alt="Profile" className="h-full w-full rounded-full object-cover" />
-                  ) : initial || <User className="h-5 w-5" />}
+                <div className="flex items-center gap-x-2 sm:gap-x-3 lg:gap-x-4 ml-auto">
+                  <button
+                    type="button"
+                    className="rounded-lg p-2.5 text-text-secondary transition-colors hover:bg-background-alt hover:text-text-primary"
+                  >
+                    <span className="sr-only">View notifications</span>
+                    <Bell className="h-5 w-5" aria-hidden="true" />
+                  </button>
+
+                  {settingsHref ? (
+                    <Link
+                      href={settingsHref}
+                      className="hidden rounded-lg p-2.5 text-text-secondary transition-colors hover:bg-background-alt hover:text-text-primary sm:inline-flex"
+                    >
+                      <span className="sr-only">Settings</span>
+                      <Settings className="h-5 w-5" aria-hidden="true" />
+                    </Link>
+                  ) : null}
+
+                  <div className="hidden lg:block lg:h-8 lg:w-px lg:bg-border" />
+
+                  <div className="flex items-center gap-x-3 pl-1">
+                    <span className="sr-only">Your profile</span>
+                    <div className="hidden text-right lg:block">
+                      <p className="max-w-56 truncate text-sm font-bold text-text-primary">
+                        {displayName}
+                      </p>
+                    </div>
+                    <div className="h-11 w-11 rounded-full border border-border bg-white flex items-center justify-center text-brand-indigo font-bold shadow-sm">
+                      {user?.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={user.avatarUrl}
+                          alt="Profile"
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        initial || <User className="h-5 w-5" />
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </header>)}
+            </header>,
+          )}
 
-        {/* Main Content Area */}
-        <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-10">
-          <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[1500px] mx-auto">
-            {children}
-          </div>
-        </main>
-      </div>)}
+          {/* Main Content Area */}
+          <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-10">
+            <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[1500px] mx-auto">
+              {children}
+            </div>
+          </main>
+        </div>,
+      )}
     </div>
   );
 }

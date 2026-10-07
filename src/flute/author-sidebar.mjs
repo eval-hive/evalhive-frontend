@@ -39,7 +39,7 @@ if (process.argv.includes('--animate')) {
     }
   }
 }
-const recipe = {version:1,id:'sidebar-descent',title:'Sidebar / Descent',description:'A close oblique rail down the live school dashboard. Navigation lifts from the page and settles row by row into its original slots.',definition:{scene,motion,width:1600,height:1000}};
+const recipe = {version:1,id:'sidebar-descent',title:'Sidebar / Descent',description:'A close oblique rail down the live school dashboard. Navigation lifts from the page and settles row by row into its original slots.',definition:{scene,motion,width:1920,height:1080}};
 const review = reviewAuthoring({scene, motion});
 console.log(JSON.stringify(review));
 if (!review.valid) throw new Error('Scene authoring validation failed');
